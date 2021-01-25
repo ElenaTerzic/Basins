@@ -6,7 +6,7 @@ from __future__ import print_function, division
 
 import numpy as np
 
-from .basic import Basin
+from .entities import Basin
 
 med    = Basin.from_array('med', 'Mediterranean Sea', np.array([[-5.71, 36.10 , 0.],[3.16 , 45.03 , 0.],[15.56, 46.98 , 0.],[28.39, 41.24 , 0.],[33.49, 40.45 , 0.],[37.53, 36.32 , 0.],[35.77, 30.75 , 0.],[29.79, 30.22 , 0.],[19.25, 29.38 , 0.],[-3.78, 33.94 , 0.],[-5.54, 34.45 , 0.]]))
 
