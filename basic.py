@@ -312,7 +312,7 @@ class Ball(object):
 
 	def areinside(self,xyz):
 		vec  = xyz - np.tile(self.center.xyz,(xyz.shape[0],1))
-		dist = np.sum(vec*vec,axis=1) 
+		dist = np.sqrt(np.sum(vec*vec,axis=1))
 		return dist < self.radius if not self.isempty() else np.zeros((xyz.shape[0],),dtype=bool)
 
 	def isdisjoint(self,ball):

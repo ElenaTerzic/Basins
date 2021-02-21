@@ -151,4 +151,4 @@ clean:
 	-@rm -rf __pycache__ 
 
 uninstall: clean
-	-@rm -rf build
+	-@rm -rf  *.so build
