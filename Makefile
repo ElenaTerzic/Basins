@@ -19,7 +19,7 @@ TUNE = skylake
 
 # Options
 #
-VECTORIZATION = OFF
+VECTORIZATION = ON
 OPENMP_PARALL = OFF
 FORCE_GCC     = OFF
 DEBUGGING     = OFF
@@ -147,7 +147,7 @@ python: setup.py
 # Clean
 #
 clean:
-	-@rm -f *.o *.pyc *.c *.html
+	-@rm -f *.o *.pyc *.c *.cpp *.html
 	-@rm -rf __pycache__ 
 
 uninstall: clean

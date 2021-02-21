@@ -395,7 +395,7 @@ class Polygon(object):
 		A polygon set as an array of points. Can be either 2D or 3D.
 		'''
 		def __init__(self, points):
-			self._points = copy.deepcopy(points + [points[0]])
+			self._points = np.append(points,points[0])
 			self._bbox   = Ball.fastBall(self) # Create a ball bounding box using fastBall
 
 		def __str__(self):

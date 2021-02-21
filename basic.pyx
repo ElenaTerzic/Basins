@@ -1,26 +1,84 @@
 #!/usr/bin/env cython
-# cython: boundscheck=False
-# cython: cdivision=True
-# cython: wraparound=False
-# cython: nonecheck=False
 
 # Edited by amiro and eterzic 21.02.2021
 from __future__ import print_function, division
 
 import numpy as np
-cimport numpy as np, cython
+cimport numpy as np
 
-from libc.math cimport sqrt
+from libcpp cimport bool
 
+# Declare the class with cdef
+cdef extern from "geometry.h" namespace "Geom":
+	# Point class
+	cdef cppclass CPoint "Geom::Point":
+		CPoint() except +
+		CPoint(const double, const double, const double) except +
+		void    set(const int i, const double val)
+		double  get(const int i)
+		double  x()
+		double  y()
+		double  z()
+		double  dist(const CPoint &pp) const
+		double  dist2(const CPoint &pp) const
+		double isLeft(const CPoint &P0, const CPoint &P1) const
+	# Vector class
+	cdef cppclass CVector "Geom::Vector":
+		CVector() except +
+		CVector(const double x, const double y, const double z) except +
+		CVector(const double *p) except +
+		void    set(const int i, const double val)
+		double  get(const int i)
+		double  x()
+		double  y()
+		double  z()
+		double  dot(const CVector &vv) const
+		CVector cross(const CVector &vv) const
+		double  norm() const
+		double  norm2() const
+	# Ball class
+	cdef cppclass CBall "Geom::Ball":
+		CBall() except +
+		CBall(const double r, const CPoint &p) except +
+		CBall(const CPoint &p, const double r) except +
+		CBall(const CPolygon &p) except +
+		CPoint get_center() const
+		double get_radius() const
+		bool isempty() const
+		bool isinside(const CPoint &p) const
+		bool isdisjoint(const CBall &b) const
+	# Polygon class
+	cdef cppclass CPolygon "Geom::Polygon":
+		CPolygon() except +
+		CPolygon(const int nn) except +
+		CPolygon(const int nn, const CPoint &v) except +
+		CPolygon(const int nn, const CPoint *v) except +
+		void    set_npoints(const int nn)
+		void    set_point(const int i, const CPoint &v)
+		void    set_points(const CPoint v)
+		void    set_points(const CPoint *v)
+		void    set_bbox(CBall &b)
+		void    clear()
+		void    set(const int nn, const CPoint &v)
+		void    set(const int nn, const CPoint *v)
+		CPoint *get_points() const
+		CPoint  get_point(const int i) const
+		int     get_npoints() const
+		CBall   get_bbox() const
+		bool    isempty() const
+		bool    isinside(const CPoint &v) const
+		bool    isinside_cn(const CPoint &v) const
+		bool    isinside_wn(const CPoint &v) const
+
+
+# Class wrapping a point
 cdef class Point:
 	'''
 	A simple 3D point.
 	'''
-	cdef double _xyz[3]
-	def __init__(self,double x,double y ,double z):
-		self._xyz[0] = x
-		self._xyz[1] = y
-		self._xyz[2] = z
+	cdef CPoint _point
+	def __init__(self,double x, double y, double z):
+		self._point = CPoint(x,y,z)
 
 	def __str__(self):
 		return '[ %f %f %f ]' % (self.x,self.y,self.z)
@@ -30,20 +88,18 @@ cdef class Point:
 		'''
 		Point[i]
 		'''
-		return self._xyz[i]
+		return self._point.get(i)
 
 	def __setitem__(self,int i,double value):
 		'''
 		Point[i] = value
 		'''
-		self._xyz[i] = value
+		self._point.set(i,value)
 
-	def __add__(self,object other):
+	def __add__(self,Vector other):
 		'''
 		Point = Point + Vector
 		'''
-		if not isinstance(other,Vector):
-			raise ValueError('Only Point + Vector is allowed!')
 		return Point(self.x+other.x,self.y+other.y,self.z+other.z)
 
 	def __sub__(self,object other):
@@ -57,15 +113,13 @@ cdef class Point:
 			return Vector(self.x-other.x,self.y-other.y,self.z-other.z)
 		raise ValueError('Unknown instance in Point subtraction!')
 
-	def __eq__(self,object other):
+	def __eq__(self,Point other):
 		'''
 		Point == Point
 		'''
-		if not isinstance(other,Point):
-			raise ValueError('Only Point == Point is allowed!')
-		return ( (self.x == other.x) and (self.y == other.y) and (self.z == other.z) )
+		return (self.x == other.x) and (self.y == other.y) and (self.z == other.z)
 
-	def __ne__(self,object other):
+	def __ne__(self,Point other):
 		'''
 		Point != Point
 		'''
@@ -76,15 +130,13 @@ cdef class Point:
 		'''
 		Distance between two points
 		'''
-		cdef Vector v = self - p # Vector as the difference between two points
-		return v.norm()
+		return self._point.dist(p._point)
 
 	def dist2(self,Point p):
 		'''
 		Distance between two points squared
 		'''
-		cdef Vector v = self - p # Vector as the difference between two points
-		return v.norm2()
+		return self._point.dist2(p._point)
 
 	def isLeft(self,Point p1,Point p2):
 		'''
@@ -106,7 +158,7 @@ cdef class Point:
 		liable for any real or imagined damage resulting from its use.
 		Users of this code must verify correctness for their application.
 		'''
-		return ( (p2.x - p1.x)*(self.y - p1.y) - (self.x - p1.x)*(p2.y - p1.y) )
+		return self._point.isLeft(p1._point,p2._point)
 
 	@staticmethod
 	def areLeft(double[:,:] xyz,Point p1,Point p2):
@@ -132,7 +184,7 @@ cdef class Point:
 		cdef int ii, npoints = xyz.shape[0]
 		cdef np.ndarray[np.int_t,ndim=1] out = np.zeros((npoints,),dtype=np.int)
 		for ii in range(npoints):
-			out[ii] = ( (p2.x - p1.x)*(xyz[ii,1] - p1.y) - (xyz[ii,0] - p1.x)*(p2.y - p1.y) )
+			return ( (p2.x - p1.x)*(xyz[ii,1] - p1.y) - (xyz[ii,0] - p1.x)*(p2.y - p1.y) )
 		return out
 
 	@classmethod
@@ -144,25 +196,29 @@ cdef class Point:
 
 	@property
 	def x(self):
-		return self._xyz[0]
+		return self._point.x()
 	@property
 	def y(self):
-		return self._xyz[1]
+		return self._point.y()
 	@property
 	def z(self):
-		return self._xyz[2]
+		return self._point.z()
 	@property
 	def xyz(self):
-		return self._xyz
+		cdef np.ndarray[np.double_t,ndim=1] _xyz = np.zeros((3,),dtype=np.double)
+		_xyz[0] = self._point.x()
+		_xyz[1] = self._point.y()
+		_xyz[2] = self._point.z()
+		return _xyz
 
-
+# Class wrapping a vector
 cdef class Vector:
 	'''
 	A simple 3D vector.
 	'''
-	cdef double _xyz[3]
+	cdef CVector _vector
 	def __init__(self, double x, double y, double z):
-		self._xyz = np.array([x,y,z])
+		self._vector = CVector(x,y,z)
 
 	def __str__(self):
 		return '( %f %f %f )' % (self.x,self.y,self.z)
@@ -172,28 +228,24 @@ cdef class Vector:
 		'''
 		Point[i]
 		'''
-		return self._xyz[i]
+		return self._vector.get(i)
 
 	def __setitem__(self,int i,double value):
 		'''
 		Point[i] = value
 		'''
-		self._xyz[i] = value
+		self._vector.set(i,value)
 
-	def __add__(self,object other):
+	def __add__(self,Vector other):
 		'''
 		Vector = Vector + Vector
 		'''
-		if not isinstance(other,Vector):
-			raise ValueError('Only Vector + Vector is allowed!')
 		return Vector(self.x+other.x,self.y+other.y,self.z+other.z)
 
-	def __sub__(self,object other):
+	def __sub__(self,Vector other):
 		'''
 		Vector = Vector - Vector
 		'''
-		if not isinstance(other,Vector):
-			raise ValueError('Only Vector - Vector is allowed!')
 		return Vector(self.x-other.x,self.y-other.y,self.z-other.z)
 
 	def __mul__(self,object other):
@@ -213,21 +265,19 @@ cdef class Vector:
 		'''
 		return self.__mul__(other)
 
-	def __truediv__(self,object other):
+	def __truediv__(self,double other):
 		'''
 		Vector = Vector/val
 		'''
 		return Vector(self.x/other,self.y/other,self.z/other)
 
-	def __eq__(self,object other):
+	def __eq__(self,Vector other):
 		'''
 		Vector == Vector
 		'''
-		if not isinstance(other,Vector):
-			raise ValueError('Only Vector == Vector is allowed!')
-		return ( (self.x == other.x) and (self.y == other.y) and (self.z == other.z) )
+		return (self.x == other.x) and (self.y == other.y) and (self.z == other.z)
 
-	def __ne__(self,object other):
+	def __ne__(self,Vector other):
 		'''
 		Vector != Vector
 		'''
@@ -238,48 +288,53 @@ cdef class Vector:
 		'''
 		Dot product
 		'''
-		return (self.x*v.x + self.y*v.y + self.z*v.z)
+		return self._vector.dot(v._vector)
 	
 	def cross(self,Vector v):
 		'''
 		Cross product
 		'''
-		return Vector(self.y*v.z-self.z*v.y,-self.x*v.z+self.z*v.x,self.x*v.y-self.y*v.x)
+		cdef Vector out = Vector(0.,0.,0.)
+		out._vector = self._vector.cross(v._vector)
+		return out
 
 	def norm(self):
 		'''
 		Vector norm
 		'''
-		return sqrt(self.norm2())
+		return self._vector.norm2()
 
 	def norm2(self):
 		'''
 		Vector norm squared
 		'''
-		return self.dot(self)
+		return self._vector.norm2()
 
 	@property
 	def x(self):
-		return self._xyz[0]
+		return self._vector.x()
 	@property
 	def y(self):
-		return self._xyz[1]
+		return self._vector.y()
 	@property
 	def z(self):
-		return self._xyz[2]
+		return self._vector.z()
 	@property
 	def xyz(self):
-		return self._xyz
+		cdef np.ndarray[np.double_t,ndim=1] _xyz = np.zeros((3,),dtype=np.double)
+		_xyz[0] = self._point.x()
+		_xyz[1] = self._point.y()
+		_xyz[2] = self._point.z()
+		return _xyz
 
+# Class wrapping a ball
 cdef class Ball:
 	'''
 	A 2D circle or a 3D sphere wrapped in a single class
 	'''
-	cdef Point  _center
-	cdef double _radius
+	cdef CBall _ball
 	def __init__(self, Point center = Point(0.,0.,0.), double radius = 0.):
-		self._center = center
-		self._radius = radius
+		self._ball = CBall(center._point,radius)
 
 	def __str__(self):
 		return 'center = ' + self.center.__str__() + ' radius = %f' % (self.radius)
@@ -311,23 +366,22 @@ cdef class Ball:
 
 	# Functions
 	def isempty(self):
-		return self._radius == 0
+		return self._ball.isempty()
 	
 	def isinside(self,Point point):
-		return True if not self.isempty() and point.dist(self.center) < self.radius else False
+		return self._ball.isinside(point._point)
 
 	def areinside(self,double[:,:] xyz):
 		cdef int ii, npoints = xyz.shape[0]
-		cdef Point p
+		cdef CPoint p
 		cdef np.ndarray[np.npy_bool,ndim=1,cast=True] out = np.zeros((npoints,),dtype=np.bool)
-		
 		for ii in range(npoints):
-			p = Point.from_array(xyz[ii,:])
-			out[ii] = self.isinside(p)
+			p       = CPoint(xyz[ii,0],xyz[ii,1],xyz[ii,2])
+			out[ii] = self._ball.isinside(p)
 		return out
 
 	def isdisjoint(self,Ball ball):
-		return True if not self.isempty() and ball.center.dist(self.center) < self.radius + ball.radius else False
+		return self._ball.isdisjoint(ball._ball)
 
 	@classmethod
 	def fastBall(cls,Polygon poly):
@@ -349,90 +403,45 @@ cdef class Ball:
 		liable for any real or imagined damage resulting from its use.
 		Users of this code must verify correctness for their application.
 		'''
-		cdef int ii
-		cdef double xmin, xmax, ymin, ymax  # bounding box extremes
-		cdef int Pxmin, Pxmax, Pymin, Pymax # index of  P[] at box extreme
-
-		# Find a large diameter to start with
-		# first get the bounding box and P[] extreme points for it
-		xmin = xmax = poly[0][0]
-		ymin = ymax = poly[0][1]
-		Pxmin = Pxmax = Pymin = Pymax = 0
-
-		for ii in range(poly.npoints):
-			if poly[ii][0] < xmin:
-				xmin  = poly[ii][0]
-				Pxmin = ii
-			elif poly[ii][0] > xmax:
-				xmax  = poly[ii][0]
-				Pxmax = ii
-			if poly[ii][1] < ymin:
-				ymin  = poly[ii][1]
-				Pymin = ii
-			elif poly[ii][1] > ymax:
-				ymax  = poly[ii][1]
-				Pymax = ii
-
-		# Select the largest extent as an initial diameter for the  ball
-		cdef Point center = Point(0.,0.,0.)
-		cdef Vector dPx = poly[Pxmax] - poly[Pxmin], dPy = poly[Pymax] - poly[Pymin]
-		cdef double rad2, dx2 = dPx.norm2(), dy2 = dPy.norm2()
-
-		if dx2 >= dy2: # x direction is largest extent
-			center = poly[Pxmin] + (dPx/2.) 
-			rad2   = poly[Pxmax].dist2(center)
-		else:
-			center = poly[Pymin] + (dPy/2.)
-			rad2   = poly[Pymax].dist2(center)
-
-		cdef double rad = sqrt(rad2)
-
-		# Now check that all points p[i] are in the ball
-		# and if not, expand the ball just enough to include them
-		cdef Vector dP
-		cdef double dist, dist2;
-
-		for ii in range(poly.npoints):
-			dP    = poly[ii] - center 
-			dist2 = dP.norm2()
-			if (dist2 <= rad2): continue # p[i] is inside the ball already
-			# p[i] not in ball, so expand ball  to include it
-			dist   = sqrt(dist2)
-			rad    = (rad + dist)/2.
-			rad2   = rad*rad # enlarge radius just enough
-			center = center + dP*((dist-rad)/dist) # shift Center toward p[i]
-
-		# Return the ball
-		return cls(center,rad)
+		cdef Ball out = cls(Point(0.,0.,0.),0.)
+		out._ball = CBall(poly._poly)
+		return out
 
 	@property
 	def center(self):
-		return self._center
+		cdef Point out = Point(0.,0.,0.)
+		out._point = self._ball.get_center()
+		return out
 	@property
 	def radius(self):
-		return self._radius
+		return self._ball.get_radius()
 
-
+# Wrapper class for polygon
 cdef class Polygon:
 		'''
 		A polygon set as an array of points. Can be either 2D or 3D.
 		'''
-		cdef int _npoints
-		cdef np.ndarray _points
-		cdef Ball _bbox
-		def __init__(self, list points):
-			cdef int ip
-			self._npoints = len(points)
-			# Copy points
-			self._points = np.array([Point(p.x,p.y,p.z) for p in points],dtype=np.object)
-			self._points = np.append(self._points,np.array(Point(points[0].x,points[0].y,points[0].z)))
-			self._bbox   = Ball.fastBall(self) # Create a ball bounding box using fastBall
+		cdef CPolygon _poly
+		cdef Point[:] _points
+		def __init__(self,Point[:] points):
+			cdef int ip, npoints = len(points)
+			self._points = points
+			self._poly.set_npoints(npoints)
+			for ip in range(npoints):
+				self._poly.set_point(ip,points[ip]._point)
+			self._poly.set_point(npoints,points[0]._point)
+			# Set boundig box
+			cdef CBall bbox = CBall(self._poly)
+			self._poly.set_bbox(bbox)
+
+		def __dealloc__(self):
+			self._poly.clear()
 
 		def __str__(self):
 			cdef int ip
 			cdef object retstr = ''
 			for ip in range(self.npoints):
-				retstr += 'Point %d ' % ip + self._points[ip].__str__() + '\n'
+				retstr += 'Point %d %s\n' % (ip,self.points[ip].__str__())
 			return retstr
 
 		# Operators
@@ -440,13 +449,15 @@ cdef class Polygon:
 			'''
 			Polygon[i]
 			'''
-			return self._points[i]
+			cdef Point out = Point(0.,0.,0.)
+			out._point = self._poly.get_point(i)
+			return out
 
 		def __setitem__(self,int i,Point value):
 			'''
 			Polygon[i] = value
 			'''
-			self._points[i] = value
+			self._poly.set_point(i,value._point)
 
 		def __eq__(self,Polygon other):
 			'''
@@ -487,29 +498,25 @@ cdef class Polygon:
 
 		# Functions
 		def isempty(self):
-			return self.npoints == 0
+			return self._poly.isempty()
 
 		def isinside(self,Point point):
 			'''
 			Returns True if the point is inside the polygon, else False.
 			'''
-			if self.bbox > point: # Point is inside the bounding box
-				# Select the algorithm to use
-				#return True if wn_PinPoly(point,self) > 0  else False
-				return True if cn_PinPoly(point,self) == 1 else False
-			else:
-				return False
+#			return self._poly.isinside_cn(point._point)
+			return self._poly.isinside(point._point)
 
 		def areinside(self,double[:,:] xyz):
 			'''
 			Returns True if the points are inside the polygon, else False.
 			'''
 			cdef int ii, npoints = xyz.shape[0]
-			cdef Point p
+			cdef CPoint p
 			cdef np.ndarray[np.npy_bool,ndim=1,cast=True] out = np.zeros((npoints,),dtype=np.bool)
 			for ii in range(npoints):
-				p = Point.from_array(xyz[ii,:])
-				out[ii] = self.isinside(p)
+				p       = CPoint(xyz[ii,0],xyz[ii,1],xyz[ii,2])
+				out[ii] = self._poly.isinside(p)
 			return out
 
 		@classmethod
@@ -519,74 +526,38 @@ cdef class Polygon:
 			of shape (npoints,3).
 			'''
 			cdef int ii, npoints = xyz.shape[0]
-			cdef list pointList = [Point.from_array(xyz[ii,:]) for ii in range(npoints)] 
+			pointList = np.array([Point.from_array(xyz[ii,:]) for ii in range(npoints)],dtype=Point)
 			return cls(pointList)
 
 		@property
 		def npoints(self):
-			return self._npoints
+			return self._poly.get_npoints() - 1
 		@property
 		def points(self):
 			return self._points
 		@property
 		def bbox(self):
-			return self._bbox
+			cdef Ball out = Ball()
+			out._ball = self._poly.get_bbox()
+			return out
 		@property
 		def x(self):
 			cdef int ii
-			cdef np.ndarray[np.double_t,ndim=1] out = np.zeros((self._npoints,),dtype=np.double)
-			for ii in range(self._npoints):
-				out[ii] = self._points[ii].x
+			cdef np.ndarray[np.double_t,ndim=1] out = np.zeros((self.npoints+1,),dtype=np.double)
+			for ii in range(self.npoints+1):
+				out[ii] = self._poly.get_point(ii).x()
 			return out
 		@property
 		def y(self):
 			cdef int ii
-			cdef np.ndarray[np.double_t,ndim=1] out = np.zeros((self._npoints,),dtype=np.double)
-			for ii in range(self._npoints):
-				out[ii] = self._points[ii].y
+			cdef np.ndarray[np.double_t,ndim=1] out = np.zeros((self.npoints+1,),dtype=np.double)
+			for ii in range(self.npoints+1):
+				out[ii] = self._poly.get_point(ii).y()
 			return out
 		@property
 		def z(self):
 			cdef int ii
-			cdef np.ndarray[np.double_t,ndim=1] out = np.zeros((self._npoints,),dtype=np.double)
-			for ii in range(self._npoints):
-				out[ii] = self._points[ii].z
+			cdef np.ndarray[np.double_t,ndim=1] out = np.zeros((self.npoints+1,),dtype=np.double)
+			for ii in range(self.npoints+1):
+				out[ii] = self._poly.get_point(ii).z()
 			return out
-
-
-@cython.boundscheck(False) # turn off bounds-checking for entire function
-@cython.wraparound(False)  # turn off negative index wrapping for entire function
-@cython.nonecheck(False)
-def cn_PinPoly(Point point, Polygon poly):
-	'''
-	CN_PINPOLY
-
-	2D algorithm.
-	Crossing number test for a point in a polygon.
-
-	Input:   P = a point,
-	Return:  0 = outside, 1 = inside
-
-	This code is patterned after [Franklin, 2000]
-	from: http://geomalgorithms.com/a03-_inclusion.html
-
-	Copyright 2001 softSurfer, 2012 Dan Sunday
-	This code may be freely used and modified for any purpose
-	providing that this copyright notice is included with it.
-	SoftSurfer makes no warranty for this code, and cannot be held
-	liable for any real or imagined damage resulting from its use.
-	Users of this code must verify correctness for their application.
-	'''
-	cdef int ip, npoints = poly.npoints, cn = 0 # The crossing number counter
-	cdef double vt
-	# Loop through all edges of the Polygon
-	for ip in range(npoints): 
-		# an upward crossing or a downward crossing
-		if ( (poly[ip][1] <= point[1]) and (poly[ip+1][1] >  point[1]) ) or \
-		   ( (poly[ip][1] >  point[1]) and (poly[ip+1][1] <= point[1]) ):
-			# Compute  the actual edge-ray intersect x-coordinate
-			vt = (point[1] - poly[ip][1])/(poly[ip+1][1] - poly[ip][1])
-					
-			if point[0] <  poly[ip][0] + vt * (poly[ip+1][0] - poly[ip][0]): # P.x < intersect
-				cn += 1 # A valid crossing of y=P.y right of P.x
-	return not cn%2 == 0 # 0 if even (out), and 1 if  odd (in)

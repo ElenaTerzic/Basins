@@ -22,7 +22,7 @@ class Basin(Polygon):
 		Build a basin from an array of points
 		of shape (npoints,3).
 		'''
-		pointList = [Point.from_array(p) for p in xyz] 
+		pointList = np.array([Point.from_array(p) for p in xyz],dtype=Point)
 		return cls(abbrev,name,pointList)
 
 	@classmethod
@@ -32,7 +32,7 @@ class Basin(Polygon):
 		obtained by reading an npy file.
 		'''
 		xyz = np.load(fname)
-		pointList = [Point.from_array(p) for p in xyz[::downsample,:]]
+		pointList = np.array([Point.from_array(p) for p in xyz[::downsample,:]],dtype=Point)
 		return cls(abbrev,name,pointList)
 
 	@property

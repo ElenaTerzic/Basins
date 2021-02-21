@@ -8,13 +8,18 @@ import sys,numpy as np
 from setuptools import setup, Extension
 from Cython.Build import cythonize
 
+
 # Main setup
 setup(
 	name="Basins",
 	ext_modules=cythonize([
-			Extension('basic' ,sources=['basic.pyx'], language='c',include_dirs=[np.get_include()]),
+		Extension('basic',
+				  sources=['basic.pyx','src/geometry.cpp'],
+				  language='c++',
+				  include_dirs=['src/',np.get_include()]
+				 ),
 		],
 		language_level = str(sys.version_info[0]), # This is to specify python 3 synthax
-		annotate=True         # This is to generate a report on the conversion to C code
+		annotate       = True                      # This is to generate a report on the conversion to C code
 	)
 )
