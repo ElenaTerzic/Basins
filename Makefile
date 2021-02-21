@@ -147,7 +147,7 @@ python: setup.py
 # Clean
 #
 clean:
-	-@rm -f *.o *.pyc
+	-@rm -f *.o *.pyc *.c *.html
 	-@rm -rf __pycache__ 
 
 uninstall: clean

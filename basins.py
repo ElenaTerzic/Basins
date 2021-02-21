@@ -12,6 +12,7 @@ from .entities import Basin
 SHAPESPATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),'shapes')
 
 
+# Basins definition
 med    = Basin.from_array('med', 'Mediterranean Sea', np.array([[-5.71, 36.10 , 0.],[3.16 , 45.03 , 0.],[15.56, 46.98 , 0.],[28.39, 41.24 , 0.],[33.49, 40.45 , 0.],[37.53, 36.32 , 0.],[35.77, 30.75 , 0.],[29.79, 30.22 , 0.],[19.25, 29.38 , 0.],[-3.78, 33.94 , 0.],[-5.54, 34.45 , 0.]]))
 
 wmed   = Basin.from_array('wmed', 'Western Mediterranean', np.array([[-5.80, 36.14,0.],[ 4.00, 44.50,0.],[11.69, 44.56,0.],[16.88, 39.02,0.],[14.50, 37.75,0.],[14.94, 36.70,0.],[15.07, 32.10,0.],[-5.67, 34.89,0.]]))
