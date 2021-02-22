@@ -5,9 +5,9 @@ __pycache__/
 
 # C extensions
 *.so
-*.c
-*.cpp
-*.html
+basic.c
+basic.cpp
+basic.html
 
 # Distribution / packaging
 .Python
