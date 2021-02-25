@@ -45,6 +45,84 @@ class Basin(Polygon):
 	
 		
 
+class Line(object):
+	'''
+	A 2D line defined by 2 points and discretized by a number
+	of points inside that line.
+	'''
+	def __init__(self, p1, p2, npoints=100):
+		d = p2 - p1                     # vector pointing in the direction of the line
+		f = np.linspace(0.,1.,npoints)
+		self._points = [copy.deepcopy(p1)]
+		self._bbox   = []
+		for ip in range(1,npoints):
+			# Build the point list
+			self._points.append( p1 + f[ip]*d )
+			# For each point compute a ball centered on the point with
+			# a radius of half the distance to the last point
+			vec = self._points[-1] - self._points[-2]
+			self._bbox.append( Ball(self._points[-1],vec.norm()) )
+		# Add the ball for the first point
+		vec = self._points[1] - self._points[0]
+		self._bbox.insert(0,Ball(self._points[0],vec.norm()))
+		if not self._points[-1] == p2: raiseError('Last point does not match!!')
+		self._dist = np.array([])
+
+	def isempty(self):
+		return self.npoints == 0
+
+	def isinside(self,point,algorithm=None):
+		'''
+		Returns True if the point is inside (close to) the line, else False.
+		'''
+		for b in self.bbox:
+			if b > point: return True # Point is inside the bounding box
+		return False
+
+	def areinside(self,xyz,algorithm=None):
+		'''
+		Returns True if the points are inside (close to) the polygon, else False.
+		'''
+		out = np.zeros((xyz.shape[0],),dtype=bool)
+		# Loop on the point boxes and compute the points that are inside the box
+		for b in self.bbox:
+			idx      = b > xyz # Points are inside the bounding box
+			out[idx] = True
+		return out
+
+	def interpolate(self,xyz,var):
+		'''
+		Interpolates a variable value to the points of the line.
+		Assume xyz and var as masked points.
+		'''
+		if len(self._dist) == 0:
+			self._dist = np.zeros((len(self.bbox),xyz.shape[0]),dtype=np.double)
+			# Loop on the point boxes and compute the points that are inside the box
+			for ip,b in enumerate(self.bbox):
+				idx = b > xyz # Points are inside the bounding box
+				if len(idx) > 0:
+					vec = xyz[idx] - np.tile(b.center.xyz,(xyz[idx].shape[0],1))
+					self._dist[ip,idx] = np.sqrt(np.sum(vec*vec,axis=1))
+					# If there is a point matching exactly our point then
+					# the distance will be 0, so when we invert the distances
+					# the weight should be infinite
+					id0 = self._dist[ip,idx] == 0.
+					self._dist[ip,idx]      = 1./self._dist[ip,idx]
+					self._dist[ip,idx][id0] = 1.e20
+		# Compute interpolated variable	
+		out = np.zeros((len(self.bbox),var.shape[1]) if len(var.shape) > 1 else (len(self.bbox),) ,dtype=var.dtype)
+		sum_dist = np.sum(self._dist,axis=1) # length of npoints on the line
+		# Compute the averaged for the field
+		if len(var.shape) > 1: 
+			# Vectorial array
+			for idim in range(var.shape[1]):
+				out[:,idim] = np.matmul(self._dist,var[:,idim])/sum_dist
+		else:
+			# Scalar array
+			out[:] = np.matmul(self._dist,var)/sum_dist
+		return out
+
+
 class SimpleRectangle(Polygon):
 	'''
 	2D rectangle. Assumes z = 0 and the points aligned with the axis.
@@ -56,12 +134,12 @@ class SimpleRectangle(Polygon):
 	1-------2
 	'''
 	def __init__(self,xmin,xmax,ymin,ymax):
-		pointList = [
+		pointList = np.array([
 			Point(xmin,ymin,0.), # 1
 			Point(xmax,ymin,0.), # 2
 			Point(xmax,ymax,0.), # 3
 			Point(xmin,ymax,0.), # 4
-		]
+		])
 		super(SimpleRectangle, self).__init__(pointList)
 
 	def isinside(self,point,algorithm=None):
@@ -87,7 +165,7 @@ class SimpleRectangle(Polygon):
 		of shape (npoints,3).
 		'''
 		npoints   = xyz.shape[0]
-		if not npoints == 5: raise ValueError('Invalid number of points for Rectangle %d' % npoints)
+		if not npoints == 5: raiseError('Invalid number of points for Rectangle %d' % npoints)
 		return super(SimpleRectangle, cls).from_array(xyz)
 
 
@@ -101,7 +179,8 @@ class Rectangle(Polygon):
 	1-------2
 	'''
 	def __init__(self,points):
-		if not len(points) == 4: raise ValueError('Invalid Rectangle!')
+		if not len(points) == 4: raiseError('Invalid Rectangle!')
+		self._center = Point.from_array(0.25*(points[0].xyz+points[1].xyz+points[2].xyz+points[3].xyz))
 		super(Rectangle, self).__init__(points)
 
 	def normal(self):
@@ -109,17 +188,11 @@ class Rectangle(Polygon):
 		Returns the unitary normal that defines the plane
 		of the Rectangle.
 		'''
-		# Compute the normal with one side
-		v1 = self.points[1] - self.points[0] # P2 - P1
-		v2 = self.points[3] - self.points[0] # P4 - P1
-		w1 = v2.cross(v1)                    # v2 x v1
-		# Compute the normal with the other side
-		v3 = self.points[3] - self.points[2] # P4 - P3
-		v4 = self.points[1] - self.points[2] # P2 - P3
-		w2 = v4.cross(v3)                    # v1 x v2
-		# Crash if the normals are not equal!
-		if not w1 == w2: raise ValueError('Rectangle must define one plane!')
-		return w1/w1.norm()
+		# Code_Saturne algorithm
+		u = self.points[1] - self._center
+		v = self.points[0] - self._center
+		n = u.cross(v)
+		return n/n.norm()
 
 	def project(self,point):
 		'''
@@ -134,11 +207,11 @@ class Rectangle(Polygon):
 		else:
 			# We are dealing with a list of points
 			npoints = point.shape[0]
-			n       = np.tile(n._xyz,(npoints,)).reshape(npoints,3)
+			n       = np.tile(n.xyz,(npoints,)).reshape(npoints,3)
 			vp      = point - np.tile(self.points[0].xyz,(npoints,)).reshape(npoints,3)
 			dist    = np.tile(np.sum(vp*n,axis=1),(3,1)).T
 		# Projected point in the Rectangle plane
-		return point + dist*n
+		return point + n*dist, dist
 
 	def inclusion3D(self,point):
 		'''
@@ -150,18 +223,20 @@ class Rectangle(Polygon):
 
 		This function is for internal use inside the Cube method.
 		'''
-		n = self.normal()       # Normal to the plane
-		p = self.project(point) # Projected point
+		n   = self.normal()       # Normal to the plane
+		p,_ = self.project(point) # Projected point
 		# Which is the biggest dimension?
 		idmax = np.argmax(np.abs(n.xyz))
 		# Convert to xy the smallest dimensions for Rectangle
+		points = self.points
 		for ip in range(self.npoints):
-			self.points[ip]._xyz = np.append(np.delete(self.points[ip]._xyz,idmax),np.zeros((1,)))
+			points[ip].xyz = np.append(np.delete(self.points[ip].xyz,idmax),np.zeros((1,)))
+		self.points = points
 		# Redo the bounding box
-		self._bbox = Ball.fastBall(self)
+		self.bbox = Ball.fastBall(self)
 		# Do the same for the points
 		if isinstance(point,Point):
-			p._xyz =  np.append(np.delete(p._xyz,idmax),np.zeros((1,)))
+			p.xyz =  np.append(np.delete(p.xyz,idmax),np.zeros((1,)))
 		else:
 			npoints = p.shape[0]
 			p =  np.append(np.delete(p,idmax,axis=1),np.zeros((npoints,1)),axis=1)
@@ -173,9 +248,63 @@ class Rectangle(Polygon):
 		Build a square from an array of points
 		of shape (npoints,3).
 		'''
-		npoints   = xyz.shape[0]
-		if not npoints == 4: raise ValueError('Invalid number of points for Rectangle %d' % npoints)
+		npoints = xyz.shape[0]
+		if not npoints == 4: raiseError('Invalid number of points for Rectangle %d' % npoints)
 		return super(Rectangle, cls).from_array(xyz)
+
+
+class Plane(Rectangle):
+	'''
+	3D plane in rectangular form, useful for slices.
+
+	4-------3
+	|		|
+	|		|
+	1-------2
+	'''
+	def __init__(self,points,mindist=0.1):
+		self._mindist = mindist
+		if not len(points) == 4: raiseError('Invalid Plane!')
+		super(Plane, self).__init__(points)
+
+	def isinside(self,point,algorithm=None):
+		'''
+		Project the point to the plane defined by the 3D rectangle
+		and obtain the inclusion.
+		'''
+		# Create an auxiliary rectangle
+		points = np.array([self.points[0].xyz,
+						   self.points[1].xyz,
+						   self.points[2].xyz,
+						   self.points[3].xyz
+						  ]).copy()
+		aux = Rectangle.from_array(points)
+		# Obtain the distance of the point to the plane
+		_,dist = aux.project(point)
+		# Check if the projected point is inside the face
+		inside = aux.isinside(aux.inclusion3D(point))
+		# Appart from being inside the point has to fulfill the minimum distance
+		return inside and dist <= self._mindist
+
+	def areinside(self,xyz,algorithm=None):
+		'''
+		Project the points to the plane defined by the 3D rectangle
+		and obtain the inclusion.
+		'''
+		# Create an auxiliary rectangle
+		points = np.array([self.points[0].xyz,
+						   self.points[1].xyz,
+						   self.points[2].xyz,
+						   self.points[3].xyz
+						  ]).copy()
+		aux = Rectangle.from_array(points)
+		# Obtain the distance of the point to the plane
+		_,dist = aux.project(xyz)
+		# Check if the projected point is inside the face
+		inside = aux.areinside(aux.inclusion3D(xyz))
+		# Appart from being inside the point has to fulfill the minimum distance
+		print(inside,dist)
+		return np.logical_and(inside,np.abs(dist[:,0]) <= self._mindist)
 
 
 class SimpleCube(Polygon):
@@ -187,11 +316,11 @@ class SimpleCube(Polygon):
 	 /|      /|
 	4-------3 |
 	| 5-----|-6
-	|/	    |/
+	|/      |/
 	1-------2
 	'''
 	def __init__(self,xmin,xmax,ymin,ymax,zmin,zmax):
-		pointList = [
+		pointList = np.array([
 			Point(xmin,ymin,zmin), # 1
 			Point(xmax,ymin,zmin), # 2
 			Point(xmax,ymax,zmin), # 3
@@ -200,7 +329,7 @@ class SimpleCube(Polygon):
 			Point(xmax,ymin,zmax), # 6
 			Point(xmax,ymax,zmax), # 7
 			Point(xmin,ymax,zmax), # 8
-		]
+		])
 		super(SimpleCube, self).__init__(pointList)
 
 	def isinside(self,point,algorithm=None):
@@ -228,7 +357,7 @@ class SimpleCube(Polygon):
 		of shape (npoints,3).
 		'''
 		npoints   = xyz.shape[0]
-		if not npoints == 8: raise ValueError('Invalid number of points for Cube %d' % npoints)
+		if not npoints == 8: raiseError('Invalid number of points for Cube %d' % npoints)
 		return super(SimpleCube, cls).from_array(xyz)
 
 
@@ -240,12 +369,14 @@ class Cube(Polygon):
 	 /|      /|
 	4-------3 |
 	| 5-----|-6
-	|/	    |/
+	|/      |/
 	1-------2
 	'''
 	def __init__(self,points):
-		if not len(points) == 8: raise ValueError('Invalid Cube!')
+		if not len(points) == 8: raiseError('Invalid Cube!')
 		super(Cube, self).__init__(points)
+		# Generate the indices for each face
+		self._face_ids = [(0,1,2,3),(4,5,6,7),(0,1,5,4),(2,6,7,3),(0,3,7,4),(1,2,6,5)]
 
 	def isinside(self,point,algorithm=None):
 		'''
@@ -253,25 +384,18 @@ class Cube(Polygon):
 		if the point is inside or outside of the 2D geometry.
 		Each face is a rectangle
 		'''
-		# Generate the indices for each face
-		face_ids = [(0,1,2,3),(4,5,6,7),(0,1,5,4),(2,6,7,3),(0,3,7,4),(1,2,6,5)]
 		# Loop the faces
-		for face_id in face_ids:
-			print(face_id)
+		for face_id in self._face_ids:
+			face_points = np.array([self.points[face_id[0]].xyz,
+							        self.points[face_id[1]].xyz,
+							        self.points[face_id[2]].xyz,
+							        self.points[face_id[3]].xyz
+							      ]).copy()
 			# Obtain each face as a Rectangle
-			face = Rectangle([self.points[face_id[0]],
-							  self.points[face_id[1]],
-							  self.points[face_id[2]],
-							  self.points[face_id[3]]]
-							)
-			print(face)
-			p = face.inclusion3D(point)
-			print(face)
-			print(point,p)
+			face = Rectangle.from_array(face_points)
 			# Check if the projected point is inside the face
-			inside = face.isinside(p)
+			inside = face.isinside(face.inclusion3D(point))
 			# If the point is outside the face we can already stop
-			print(inside)
 			if not inside: return False
 		# If we reached here it means the point is inside all the faces
 		return True
@@ -284,16 +408,15 @@ class Cube(Polygon):
 		'''
 		npoints = xyz.shape[0]
 		out     = np.ones((npoints,),dtype=bool)
-		# Generate the indices for each face
-		face_ids = [(0,1,2,3),(4,5,6,7),(0,1,5,4),(2,6,7,3),(0,3,7,4),(1,2,6,5)]
 		# Loop the faces
-		for face_id in face_ids:
+		for face_id in self._face_ids:
+			face_points = np.array([self.points[face_id[0]].xyz,
+							        self.points[face_id[1]].xyz,
+							        self.points[face_id[2]].xyz,
+							        self.points[face_id[3]].xyz
+							      ]).copy()
 			# Obtain each face as a Rectangle
-			face = Rectangle([self.points[face_id[0]],
-							  self.points[face_id[1]],
-							  self.points[face_id[2]],
-							  self.points[face_id[3]]]
-							)
+			face = Rectangle.from_array(face_points)
 			# Check if the projected points are inside the face
 			inside = face.areinside(face.inclusion3D(xyz))
 			# Filter out the points that are outside (False)
@@ -307,5 +430,5 @@ class Cube(Polygon):
 		of shape (npoints,3).
 		'''
 		npoints   = xyz.shape[0]
-		if not npoints == 8: raise ValueError('Invalid number of points for Cube %d' % npoints)
+		if not npoints == 8: raiseError('Invalid number of points for Cube %d' % npoints)
 		return super(Cube, cls).from_array(xyz)

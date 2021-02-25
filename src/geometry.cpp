@@ -29,14 +29,15 @@ namespace Geom
 	*/
 	void Ball::fastBall(const Polygon &p) {
 
-		double xmin, xmax, ymin, ymax;      // bounding box extremes
-		int   Pxmin, Pxmax, Pymin, Pymax;   // index of  P[] at box extreme
+		double xmin,  xmax,  ymin,  ymax,  zmin,  zmax; // bounding box extremes
+		int   Pxmin, Pxmax, Pymin, Pymax, Pzmin, Pzmax; // index of P[] at box extreme
 
 		// Find a large diameter to start with
 		// first get the bounding box and P[] extreme points for it
 		xmin = xmax = p[0][0];
 		ymin = ymax = p[0][1];
-		Pxmin = Pxmax = Pymin = Pymax = 0;
+		zmin = zmax = p[0][2];
+		Pxmin = Pxmax = Pymin = Pymax = Pzmin = Pzmax = 0;
 
 		for (int ii=1; ii<p.get_npoints(); ++ii) {
 			if (p[ii][0] < xmin) {
@@ -49,18 +50,29 @@ namespace Geom
 			} else if (p[ii][1] > ymax) {
 				ymax = p[ii][1]; Pymax = ii;
 			}
+			if (p[ii][2] < zmin) {
+				zmin = p[ii][2]; Pzmin = ii;
+			} else if (p[ii][2] > zmax) {
+				zmax = p[ii][2]; Pzmax = ii;
+			}
 		}
 
 		// Select the largest extent as an initial diameter for the  ball
 		Point C;
-		Vector dPx = p[Pxmax] - p[Pxmin], dPy = p[Pymax] - p[Pymin];
-		double rad2, dx2 = dPx.norm2(), dy2 = dPy.norm2();
+		Vector dPx = p[Pxmax] - p[Pxmin], dPy = p[Pymax] - p[Pymin], dPz = p[Pzmax] - p[Pzmin];
+		double rad2, dx2 = dPx.norm2(), dy2 = dPy.norm2(), dz2 = dPz.norm2();
 
-		if (dx2 >= dy2) {  // x direction is largest extent
-			C = p[Pxmin] + (dPx/2.); rad2 = p[Pxmax].dist2(C);
-		} else {
-			C = p[Pymin] + (dPy/2.); rad2 = p[Pymax].dist2(C);
+		if (dx2 >= dy2 && dx2 >= dz2) {  // x direction is largest extent
+			C    = p[Pxmin] + (dPx/2.); 
+			rad2 = p[Pxmax].dist2(C);
+		} else if (dy2 >= dx2 && dy2 >= dz2) { // y direction is largest extent
+			C    = p[Pymin] + (dPy/2.);
+			rad2 = p[Pymax].dist2(C);
+		} else { // z direction is largest extent
+			C    = p[Pzmin] + (dPz/2.);
+			rad2 = p[Pzmax].dist2(C);
 		}
+
 		double rad = std::sqrt(rad2);
 
 		// Now check that all points p[i] are in the ball
@@ -68,11 +80,15 @@ namespace Geom
     	Vector dP; double dist, dist2;
 
     	for (int ii=0; ii<p.get_npoints(); ++ii) {
-    		dP = p[ii] - C; dist2 = dP.norm2();
+    		dP    = p[ii] - C; 
+    		dist2 = dP.norm2();
     		if (dist2 <= rad2) continue; // p[i] is inside the ball already
     		// p[i] not in ball, so expand ball  to include it
-    		dist = sqrt(dist2); rad = (rad + dist)/2.; rad2 = rad*rad; // enlarge radius just enough
-    		C = C + dP*((dist-rad)/dist);                              // shift Center toward p[i]
+    		// enlarge radius just enough
+    		dist = std::sqrt(dist2); 
+    		rad  = 0.5*(rad + dist); 
+    		rad2 = rad*rad; 
+    		C    = C + dP*((dist-rad)/dist); // shift Center toward p[i]
     	}
 
     	// Set ball parameters

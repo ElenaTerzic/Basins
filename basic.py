@@ -32,11 +32,12 @@ class Point(object):
 
 	def __add__(self,other):
 		'''
+		Point = Point + Point
 		Point = Point + Vector
 		'''
-		if not isinstance(other,Vector):
-			raise ValueError('Only Point + Vector is allowed!')
-		return Point(self.x+other.x,self.y+other.y,self.z+other.z)
+		if isinstance(other,Point) or isinstance(other,Vector):
+			return Point(self.x+other.x,self.y+other.y,self.z+other.z)
+		raiseError('Only Point + Point or Point + Vector is allowed!')
 
 	def __sub__(self,other):
 		'''
@@ -47,14 +48,14 @@ class Point(object):
 			return Point(self.x-other.x,self.y-other.y,self.z-other.z)
 		if isinstance(other,Point):
 			return Vector(self.x-other.x,self.y-other.y,self.z-other.z)
-		raise ValueError('Unknown instance in Point subtraction!')
+		raiseError('Unknown instance in Point subtraction!')
 
 	def __eq__(self,other):
 		'''
 		Point == Point
 		'''
 		if not isinstance(other,Point):
-			raise ValueError('Only Point == Point is allowed!')
+			raiseError('Only Point == Point is allowed!')
 		return ( (self.x == other.x) and (self.y == other.y) and (self.z == other.z) )
 
 	def __ne__(self,other):
@@ -148,6 +149,9 @@ class Point(object):
 	@property
 	def xyz(self):
 		return self._xyz
+	@xyz.setter
+	def xyz(self,value):
+		self._xyz = value
 
 
 class Vector(object):
@@ -178,7 +182,7 @@ class Vector(object):
 		Vector = Vector + Vector
 		'''
 		if not isinstance(other,Vector):
-			raise ValueError('Only Vector + Vector is allowed!')
+			raiseError('Only Vector + Vector is allowed!')
 		return Vector(self.x+other.x,self.y+other.y,self.z+other.z)
 
 	def __sub__(self,other):
@@ -186,7 +190,7 @@ class Vector(object):
 		Vector = Vector - Vector
 		'''
 		if not isinstance(other,Vector):
-			raise ValueError('Only Vector - Vector is allowed!')
+			raiseError('Only Vector - Vector is allowed!')
 		return Vector(self.x-other.x,self.y-other.y,self.z-other.z)
 
 	def __mul__(self,other):
@@ -217,7 +221,7 @@ class Vector(object):
 		Vector == Vector
 		'''
 		if not isinstance(other,Vector):
-			raise ValueError('Only Vector == Vector is allowed!')
+			raiseError('Only Vector == Vector is allowed!')
 		return ( (self.x == other.x) and (self.y == other.y) and (self.z == other.z) )
 
 	def __ne__(self,other):
@@ -263,6 +267,9 @@ class Vector(object):
 	@property
 	def xyz(self):
 		return self._xyz
+	@xyz.setter
+	def xyz(self,value):
+		self._xyz = value
 
 
 class Ball(object):
@@ -282,7 +289,7 @@ class Ball(object):
 		Ball == Ball
 		'''
 		if not isinstance(other,Ball):
-			raise ValueError('Only Ball == Ball is allowed!')
+			raiseError('Only Ball == Ball is allowed!')
 		return self.center == other.center and self.radius == other.radius
 
 	def __gt__(self, other):
@@ -395,13 +402,13 @@ class Polygon(object):
 		A polygon set as an array of points. Can be either 2D or 3D.
 		'''
 		def __init__(self, points):
-			self._points = np.append(points,points[0])
+			self._points = copy.deepcopy(points + [points[0]])
 			self._bbox   = Ball.fastBall(self) # Create a ball bounding box using fastBall
 
 		def __str__(self):
-			retstr = ''
-			for ip in range(self.npoints):
-				retstr += 'Point %d ' % ip + self.points[ip].__str__() + '\n'
+			retstr = 'Point %d %s' % (0,self.points[0].__str__())
+			for ip in range(1,self.npoints):
+				retstr += '\nPoint %d %s' % (ip,self.points[ip].__str__())
 			return retstr
 
 		# Operators
@@ -458,7 +465,7 @@ class Polygon(object):
 		def isempty(self):
 			return self.npoints == 0
 
-		def isinside(self,point,algorithm='cn'):
+		def isinside(self,point,algorithm='wn'):
 			'''
 			Returns True if the point is inside the polygon, else False.
 			'''
@@ -471,7 +478,7 @@ class Polygon(object):
 			else:
 				return False
 
-		def areinside(self,xyz,algorithm='cn'):
+		def areinside(self,xyz,algorithm='wn'):
 			'''
 			Returns True if the points are inside the polygon, else False.
 			'''
@@ -497,9 +504,15 @@ class Polygon(object):
 		@property
 		def points(self):
 			return self._points
+		@points.setter
+		def points(self,value):
+			self._points = value
 		@property
 		def bbox(self):
 			return self._bbox
+		@bbox.setter
+		def bbox(self,value):
+			self._bbox = value
 		@property
 		def x(self):
 			return np.array([p.x for p in self._points])

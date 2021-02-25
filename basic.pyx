@@ -15,6 +15,7 @@ cdef extern from "geometry.h" namespace "Geom":
 		CPoint() except +
 		CPoint(const double, const double, const double) except +
 		void    set(const int i, const double val)
+		void    set(const double *v)
 		double  get(const int i)
 		double  x()
 		double  y()
@@ -28,6 +29,7 @@ cdef extern from "geometry.h" namespace "Geom":
 		CVector(const double x, const double y, const double z) except +
 		CVector(const double *p) except +
 		void    set(const int i, const double val)
+		void    set(const double *p)
 		double  get(const int i)
 		double  x()
 		double  y()
@@ -158,7 +160,8 @@ cdef class Point:
 		liable for any real or imagined damage resulting from its use.
 		Users of this code must verify correctness for their application.
 		'''
-		return self._point.isLeft(p1._point,p2._point)
+		cdef double out = self._point.isLeft(p1._point,p2._point)
+		return out
 
 	@staticmethod
 	def areLeft(double[:,:] xyz,Point p1,Point p2):
@@ -182,9 +185,10 @@ cdef class Point:
 		Users of this code must verify correctness for their application.
 		'''
 		cdef int ii, npoints = xyz.shape[0]
-		cdef np.ndarray[np.int_t,ndim=1] out = np.zeros((npoints,),dtype=np.int)
+		cdef double x1 = p1.x, x2 = p2.x, y1 = p1.y, y2 = p2.y
+		cdef np.ndarray[np.double_t,ndim=1] out = np.ndarray((npoints,),dtype=np.double)
 		for ii in range(npoints):
-			return ( (p2.x - p1.x)*(xyz[ii,1] - p1.y) - (xyz[ii,0] - p1.x)*(p2.y - p1.y) )
+			out[ii] = ( (x2 - x1)*(xyz[ii,1] - y1) - (xyz[ii,0] - x1)*(y2 - y1) )
 		return out
 
 	@classmethod
@@ -205,11 +209,15 @@ cdef class Point:
 		return self._point.z()
 	@property
 	def xyz(self):
-		cdef np.ndarray[np.double_t,ndim=1] _xyz = np.zeros((3,),dtype=np.double)
+		cdef np.ndarray[np.double_t,ndim=1] _xyz = np.ndarray((3,),dtype=np.double)
 		_xyz[0] = self._point.x()
 		_xyz[1] = self._point.y()
 		_xyz[2] = self._point.z()
 		return _xyz
+	@xyz.setter
+	def xyz(self,double[:] value):
+		self._point.set(&value[0])
+
 
 # Class wrapping a vector
 cdef class Vector:
@@ -288,7 +296,8 @@ cdef class Vector:
 		'''
 		Dot product
 		'''
-		return self._vector.dot(v._vector)
+		cdef double out = self._vector.dot(v._vector)
+		return out
 	
 	def cross(self,Vector v):
 		'''
@@ -302,13 +311,15 @@ cdef class Vector:
 		'''
 		Vector norm
 		'''
-		return self._vector.norm2()
+		cdef double out = self._vector.norm()
+		return out
 
 	def norm2(self):
 		'''
 		Vector norm squared
 		'''
-		return self._vector.norm2()
+		cdef double out = self._vector.norm2()
+		return out
 
 	@property
 	def x(self):
@@ -321,11 +332,15 @@ cdef class Vector:
 		return self._vector.z()
 	@property
 	def xyz(self):
-		cdef np.ndarray[np.double_t,ndim=1] _xyz = np.zeros((3,),dtype=np.double)
-		_xyz[0] = self._point.x()
-		_xyz[1] = self._point.y()
-		_xyz[2] = self._point.z()
+		cdef np.ndarray[np.double_t,ndim=1] _xyz = np.ndarray((3,),dtype=np.double)
+		_xyz[0] = self._vector.x()
+		_xyz[1] = self._vector.y()
+		_xyz[2] = self._vector.z()
 		return _xyz
+	@xyz.setter
+	def xyz(self,double[:] value):
+		self._vector.set(&value[0])
+
 
 # Class wrapping a ball
 cdef class Ball:
@@ -366,22 +381,25 @@ cdef class Ball:
 
 	# Functions
 	def isempty(self):
-		return self._ball.isempty()
+		cdef bool out = self._ball.isempty()
+		return out
 	
 	def isinside(self,Point point):
-		return self._ball.isinside(point._point)
+		cdef bool out = self._ball.isinside(point._point)
+		return out
 
 	def areinside(self,double[:,:] xyz):
 		cdef int ii, npoints = xyz.shape[0]
 		cdef CPoint p
-		cdef np.ndarray[np.npy_bool,ndim=1,cast=True] out = np.zeros((npoints,),dtype=np.bool)
+		cdef np.ndarray[np.npy_bool,ndim=1,cast=True] out = np.ndarray((npoints,),dtype=np.bool)
 		for ii in range(npoints):
 			p       = CPoint(xyz[ii,0],xyz[ii,1],xyz[ii,2])
 			out[ii] = self._ball.isinside(p)
 		return out
 
 	def isdisjoint(self,Ball ball):
-		return self._ball.isdisjoint(ball._ball)
+		cdef bool out = self._ball.isdisjoint(ball._ball)
+		return out
 
 	@classmethod
 	def fastBall(cls,Polygon poly):
@@ -414,7 +432,8 @@ cdef class Ball:
 		return out
 	@property
 	def radius(self):
-		return self._ball.get_radius()
+		cdef double out = self._ball.get_radius()
+		return out
 
 # Wrapper class for polygon
 cdef class Polygon:
@@ -424,9 +443,9 @@ cdef class Polygon:
 		cdef CPolygon _poly
 		cdef Point[:] _points
 		def __init__(self,Point[:] points):
-			cdef int ip, npoints = len(points)
+			cdef int ip, npoints = points.shape[0]
+			self._poly.set_npoints(npoints) # Already allocates npoints + 1!
 			self._points = points
-			self._poly.set_npoints(npoints)
 			for ip in range(npoints):
 				self._poly.set_point(ip,points[ip]._point)
 			self._poly.set_point(npoints,points[0]._point)
@@ -438,10 +457,10 @@ cdef class Polygon:
 			self._poly.clear()
 
 		def __str__(self):
-			cdef int ip
-			cdef object retstr = ''
-			for ip in range(self.npoints):
-				retstr += 'Point %d %s\n' % (ip,self.points[ip].__str__())
+			cdef int ip = 0
+			cdef object retstr = 'Point %d %s' % (ip,self.points[ip].__str__())
+			for ip in range(1,self.npoints):
+				retstr += '\nPoint %d %s' % (ip,self.points[ip].__str__())
 			return retstr
 
 		# Operators
@@ -463,11 +482,12 @@ cdef class Polygon:
 			'''
 			Polygon == Polygon
 			'''
+			cdef int ip, np1= self.npoints, np2 = other.npoints
 			# Check if polygons have the same number of points
-			if not self.npoints == other.npoints:
+			if not np1 == np2:
 				return False
 			# Check if the points are equal
-			for ip in range(self.npoints):
+			for ip in range(np1):
 				if not self[ip] == other[ip]:
 					return False
 			return True
@@ -498,14 +518,17 @@ cdef class Polygon:
 
 		# Functions
 		def isempty(self):
-			return self._poly.isempty()
+			cdef bool out = self._poly.isempty()
+			return out
 
 		def isinside(self,Point point):
 			'''
 			Returns True if the point is inside the polygon, else False.
 			'''
-#			return self._poly.isinside_cn(point._point)
-			return self._poly.isinside(point._point)
+			cdef bool out = self._poly.isinside(point._point)
+#			cdef bool out =  self._poly.isinside_cn(point._point)
+#			cdef bool out =  self._poly.isinside_wn(point._point)
+			return out
 
 		def areinside(self,double[:,:] xyz):
 			'''
@@ -513,7 +536,7 @@ cdef class Polygon:
 			'''
 			cdef int ii, npoints = xyz.shape[0]
 			cdef CPoint p
-			cdef np.ndarray[np.npy_bool,ndim=1,cast=True] out = np.zeros((npoints,),dtype=np.bool)
+			cdef np.ndarray[np.npy_bool,ndim=1,cast=True] out = np.ndarray((npoints,),dtype=np.bool)
 			for ii in range(npoints):
 				p       = CPoint(xyz[ii,0],xyz[ii,1],xyz[ii,2])
 				out[ii] = self._poly.isinside(p)
@@ -531,33 +554,44 @@ cdef class Polygon:
 
 		@property
 		def npoints(self):
-			return self._poly.get_npoints() - 1
+			return self._poly.get_npoints() # Returns correctly
 		@property
 		def points(self):
 			return self._points
+		@points.setter
+		def points(self,Point[:] value):
+			cdef npoints = value.shape[0]
+			self._poly.set_npoints(npoints) # Already allocates npoints + 1!
+			self._points = value
+			for ip in range(npoints):
+				self._poly.set_point(ip,value[ip]._point)
+			self._poly.set_point(npoints,value[0]._point)
 		@property
 		def bbox(self):
 			cdef Ball out = Ball()
 			out._ball = self._poly.get_bbox()
 			return out
+		@bbox.setter
+		def bbox(self,Ball value):
+			self._poly.set_bbox(value._ball)
 		@property
 		def x(self):
-			cdef int ii
-			cdef np.ndarray[np.double_t,ndim=1] out = np.zeros((self.npoints+1,),dtype=np.double)
-			for ii in range(self.npoints+1):
+			cdef int ii, npoints = self.npoints+1
+			cdef np.ndarray[np.double_t,ndim=1] out = np.ndarray((npoints,),dtype=np.double)
+			for ii in range(npoints):
 				out[ii] = self._poly.get_point(ii).x()
 			return out
 		@property
 		def y(self):
-			cdef int ii
-			cdef np.ndarray[np.double_t,ndim=1] out = np.zeros((self.npoints+1,),dtype=np.double)
-			for ii in range(self.npoints+1):
+			cdef int ii, npoints = self.npoints+1
+			cdef np.ndarray[np.double_t,ndim=1] out = np.ndarray((npoints,),dtype=np.double)
+			for ii in range(npoints):
 				out[ii] = self._poly.get_point(ii).y()
 			return out
 		@property
 		def z(self):
-			cdef int ii
-			cdef np.ndarray[np.double_t,ndim=1] out = np.zeros((self.npoints+1,),dtype=np.double)
-			for ii in range(self.npoints+1):
+			cdef int ii, npoints = self.npoints+1
+			cdef np.ndarray[np.double_t,ndim=1] out = np.ndarray((npoints,),dtype=np.double)
+			for ii in range(npoints):
 				out[ii] = self._poly.get_point(ii).z()
 			return out
