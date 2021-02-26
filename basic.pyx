@@ -560,6 +560,7 @@ cdef class Polygon:
 			return self._points
 		@points.setter
 		def points(self,Point[:] value):
+			cdef int ip
 			cdef npoints = value.shape[0]
 			self._poly.set_npoints(npoints) # Already allocates npoints + 1!
 			self._points = value
