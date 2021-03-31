@@ -1,5 +1,8 @@
 #!/usr/bin/env cython
-
+# cython: boundscheck = False
+# cython: wraparound = False
+# cython: nonecheck = False
+#
 # Edited by amiro and eterzic 21.02.2021
 from __future__ import print_function, division
 

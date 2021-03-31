@@ -4,8 +4,8 @@
 
 __VERSION__ = 1.0
 
-from .basic    import Point, Polygon
+from .basic    import Point, Ball, Polygon
 from .basins   import med, wmed, emed, socean, skadar, kotor 
-from .entities import SimpleRectangle, Rectangle, Basin
+from .entities import Basin, Line, SimpleRectangle, Rectangle, Plane, SimpleCube, Cube
 
 del basic, basins, entities

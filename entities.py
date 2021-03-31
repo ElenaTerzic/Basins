@@ -42,8 +42,7 @@ class Basin(Polygon):
 	@property
 	def name(self):
 		return self._name
-	
-		
+
 
 class Line(object):
 	'''
@@ -51,20 +50,21 @@ class Line(object):
 	of points inside that line.
 	'''
 	def __init__(self, p1, p2, npoints=100):
-		d = p2 - p1                     # vector pointing in the direction of the line
+		d = p2 - p1 # vector pointing in the direction of the line
 		f = np.linspace(0.,1.,npoints)
-		self._points = [copy.deepcopy(p1)]
-		self._bbox   = []
+		# Preallocate
+		self._points = [Point(p1.x,p1.y,p1.z) for p in range(npoints)]
+		self._bbox   = [Ball() for p in range(npoints)]
 		for ip in range(1,npoints):
 			# Build the point list
-			self._points.append( p1 + f[ip]*d )
+			self._points[ip].xyz = p1.xyz + f[ip]*d.xyz
 			# For each point compute a ball centered on the point with
 			# a radius of half the distance to the last point
-			vec = self._points[-1] - self._points[-2]
-			self._bbox.append( Ball(self._points[-1],vec.norm()) )
+			vec = self._points[ip] - self._points[ip-1]
+			self._bbox[ip] = Ball(self._points[ip],vec.norm())
 		# Add the ball for the first point
 		vec = self._points[1] - self._points[0]
-		self._bbox.insert(0,Ball(self._points[0],vec.norm()))
+		self._bbox[0] = Ball(self._points[0],vec.norm())
 		if not self._points[-1] == p2: raiseError('Last point does not match!!')
 		self._dist = np.array([])
 
@@ -75,8 +75,8 @@ class Line(object):
 		'''
 		Returns True if the point is inside (close to) the line, else False.
 		'''
-		for b in self.bbox:
-			if b > point: return True # Point is inside the bounding box
+		for b in self._bbox:
+			if b.isinside(point): return True # Point is inside the bounding box
 		return False
 
 	def areinside(self,xyz,algorithm=None):
@@ -85,8 +85,8 @@ class Line(object):
 		'''
 		out = np.zeros((xyz.shape[0],),dtype=bool)
 		# Loop on the point boxes and compute the points that are inside the box
-		for b in self.bbox:
-			idx      = b > xyz # Points are inside the bounding box
+		for b in self._bbox:
+			idx      = b.areinside(xyz) # Points are inside the bounding box
 			out[idx] = True
 		return out
 
@@ -96,10 +96,10 @@ class Line(object):
 		Assume xyz and var as masked points.
 		'''
 		if len(self._dist) == 0:
-			self._dist = np.zeros((len(self.bbox),xyz.shape[0]),dtype=np.double)
+			self._dist = np.zeros((self.npoints,xyz.shape[0]),dtype=np.double)
 			# Loop on the point boxes and compute the points that are inside the box
-			for ip,b in enumerate(self.bbox):
-				idx = b > xyz # Points are inside the bounding box
+			for ip,b in enumerate(self._bbox):
+				idx = b.areinside(xyz) # Points are inside the bounding box
 				if len(idx) > 0:
 					vec = xyz[idx] - np.tile(b.center.xyz,(xyz[idx].shape[0],1))
 					self._dist[ip,idx] = np.sqrt(np.sum(vec*vec,axis=1))
@@ -110,7 +110,7 @@ class Line(object):
 					self._dist[ip,idx]      = 1./self._dist[ip,idx]
 					self._dist[ip,idx][id0] = 1.e20
 		# Compute interpolated variable	
-		out = np.zeros((len(self.bbox),var.shape[1]) if len(var.shape) > 1 else (len(self.bbox),) ,dtype=var.dtype)
+		out = np.zeros((len(self._bbox),var.shape[1]) if len(var.shape) > 1 else (len(self._bbox),) ,dtype=var.dtype)
 		sum_dist = np.sum(self._dist,axis=1) # length of npoints on the line
 		# Compute the averaged for the field
 		if len(var.shape) > 1: 
@@ -121,6 +121,16 @@ class Line(object):
 			# Scalar array
 			out[:] = np.matmul(self._dist,var)/sum_dist
 		return out
+
+	@property
+	def npoints(self):
+		return len(self._points)
+	@property
+	def points(self):
+		return self._points
+	@points.setter
+	def points(self,value):
+		self._points = value
 
 
 class SimpleRectangle(Polygon):
