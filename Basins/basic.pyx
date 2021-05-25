@@ -62,18 +62,22 @@ cdef extern from "geometry.h" namespace "Geom":
 		void    set_point(const int i, const CPoint &v)
 		void    set_points(const CPoint v)
 		void    set_points(const CPoint *v)
+		void    set_centroid(const CPoint v)
 		void    set_bbox(CBall &b)
 		void    clear()
 		void    set(const int nn, const CPoint &v)
 		void    set(const int nn, const CPoint *v)
 		CPoint *get_points() const
 		CPoint  get_point(const int i) const
+		CPoint  get_centroid() const
 		int     get_npoints() const
 		CBall   get_bbox() const
 		bool    isempty() const
 		bool    isinside(const CPoint &v) const
 		bool    isinside_cn(const CPoint &v) const
 		bool    isinside_wn(const CPoint &v) const
+		CPoint  compute_centroid()
+		void    rotate(const double theta[3], const CPoint o);
 
 
 # Class wrapping a point
@@ -82,32 +86,32 @@ cdef class Point:
 	A simple 3D point.
 	'''
 	cdef CPoint _point
-	def __init__(self,double x, double y, double z):
+	def __init__(Point self,double x, double y, double z):
 		self._point = CPoint(x,y,z)
 
-	def __str__(self):
+	def __str__(Point self):
 		return '[ %f %f %f ]' % (self.x,self.y,self.z)
 
 	# Operators
-	def __getitem__(self,int i):
+	def __getitem__(Point self,int i):
 		'''
 		Point[i]
 		'''
 		return self._point.get(i)
 
-	def __setitem__(self,int i,double value):
+	def __setitem__(Point self,int i,double value):
 		'''
 		Point[i] = value
 		'''
 		self._point.set(i,value)
 
-	def __add__(self,Vector other):
+	def __add__(Point self,Vector other):
 		'''
 		Point = Point + Vector
 		'''
 		return Point(self.x+other.x,self.y+other.y,self.z+other.z)
 
-	def __sub__(self,object other):
+	def __sub__(Point self,object other):
 		'''
 		Point  = Point - Vector
 		Vector = Point - Point
@@ -118,32 +122,32 @@ cdef class Point:
 			return Vector(self.x-other.x,self.y-other.y,self.z-other.z)
 		raise ValueError('Unknown instance in Point subtraction!')
 
-	def __eq__(self,Point other):
+	def __eq__(Point self,Point other):
 		'''
 		Point == Point
 		'''
 		return (self.x == other.x) and (self.y == other.y) and (self.z == other.z)
 
-	def __ne__(self,Point other):
+	def __ne__(Point self,Point other):
 		'''
 		Point != Point
 		'''
 		return not self == other
 
 	# Functions
-	def dist(self,Point p):
+	def dist(Point self,Point p):
 		'''
 		Distance between two points
 		'''
 		return self._point.dist(p._point)
 
-	def dist2(self,Point p):
+	def dist2(Point self,Point p):
 		'''
 		Distance between two points squared
 		'''
 		return self._point.dist2(p._point)
 
-	def isLeft(self,Point p1,Point p2):
+	def isLeft(Point self,Point p1,Point p2):
 		'''
 		ISLEFT
 
@@ -195,30 +199,30 @@ cdef class Point:
 		return out
 
 	@classmethod
-	def from_array(cls,double[:] xyz):
+	def from_array(Point cls,double[:] xyz):
 		'''
 		Build a point from an xyz array of shape (3,)
 		'''
 		return cls(xyz[0],xyz[1],xyz[2])
 
 	@property
-	def x(self):
+	def x(Point self):
 		return self._point.x()
 	@property
-	def y(self):
+	def y(Point self):
 		return self._point.y()
 	@property
-	def z(self):
+	def z(Point self):
 		return self._point.z()
 	@property
-	def xyz(self):
+	def xyz(Point self):
 		cdef np.ndarray[np.double_t,ndim=1] _xyz = np.ndarray((3,),dtype=np.double)
 		_xyz[0] = self._point.x()
 		_xyz[1] = self._point.y()
 		_xyz[2] = self._point.z()
 		return _xyz
 	@xyz.setter
-	def xyz(self,double[:] value):
+	def xyz(Point self,double[:] value):
 		self._point.set(&value[0])
 
 
@@ -228,38 +232,38 @@ cdef class Vector:
 	A simple 3D vector.
 	'''
 	cdef CVector _vector
-	def __init__(self, double x, double y, double z):
+	def __init__(Vector self, double x, double y, double z):
 		self._vector = CVector(x,y,z)
 
-	def __str__(self):
+	def __str__(Vector self):
 		return '( %f %f %f )' % (self.x,self.y,self.z)
 
 	# Operators
-	def __getitem__(self,int i):
+	def __getitem__(Vector self,int i):
 		'''
 		Point[i]
 		'''
 		return self._vector.get(i)
 
-	def __setitem__(self,int i,double value):
+	def __setitem__(Vector self,int i,double value):
 		'''
 		Point[i] = value
 		'''
 		self._vector.set(i,value)
 
-	def __add__(self,Vector other):
+	def __add__(Vector self,Vector other):
 		'''
 		Vector = Vector + Vector
 		'''
 		return Vector(self.x+other.x,self.y+other.y,self.z+other.z)
 
-	def __sub__(self,Vector other):
+	def __sub__(Vector self,Vector other):
 		'''
 		Vector = Vector - Vector
 		'''
 		return Vector(self.x-other.x,self.y-other.y,self.z-other.z)
 
-	def __mul__(self,object other):
+	def __mul__(Vector self,object other):
 		'''
 		Vector = Vector*val
 		val    = Vector*Vector
@@ -269,40 +273,40 @@ cdef class Vector:
 		else:
 			return Vector(other*self.x,other*self.y,other*self.z)
 
-	def __rmul__(self,object other):
+	def __rmul__(Vector self,object other):
 		'''
 		Vector = val*Vector
 		val    = Vector*Vector
 		'''
 		return self.__mul__(other)
 
-	def __truediv__(self,double other):
+	def __truediv__(Vector self,double other):
 		'''
 		Vector = Vector/val
 		'''
 		return Vector(self.x/other,self.y/other,self.z/other)
 
-	def __eq__(self,Vector other):
+	def __eq__(Vector self,Vector other):
 		'''
 		Vector == Vector
 		'''
 		return (self.x == other.x) and (self.y == other.y) and (self.z == other.z)
 
-	def __ne__(self,Vector other):
+	def __ne__(Vector self,Vector other):
 		'''
 		Vector != Vector
 		'''
 		return not self == other
 
 	# Functions
-	def dot(self,Vector v):
+	def dot(Vector self,Vector v):
 		'''
 		Dot product
 		'''
 		cdef double out = self._vector.dot(v._vector)
 		return out
 	
-	def cross(self,Vector v):
+	def cross(Vector self,Vector v):
 		'''
 		Cross product
 		'''
@@ -310,14 +314,14 @@ cdef class Vector:
 		out._vector = self._vector.cross(v._vector)
 		return out
 
-	def norm(self):
+	def norm(Vector self):
 		'''
 		Vector norm
 		'''
 		cdef double out = self._vector.norm()
 		return out
 
-	def norm2(self):
+	def norm2(Vector self):
 		'''
 		Vector norm squared
 		'''
@@ -325,23 +329,23 @@ cdef class Vector:
 		return out
 
 	@property
-	def x(self):
+	def x(Vector self):
 		return self._vector.x()
 	@property
-	def y(self):
+	def y(Vector self):
 		return self._vector.y()
 	@property
-	def z(self):
+	def z(Vector self):
 		return self._vector.z()
 	@property
-	def xyz(self):
+	def xyz(Vector self):
 		cdef np.ndarray[np.double_t,ndim=1] _xyz = np.ndarray((3,),dtype=np.double)
 		_xyz[0] = self._vector.x()
 		_xyz[1] = self._vector.y()
 		_xyz[2] = self._vector.z()
 		return _xyz
 	@xyz.setter
-	def xyz(self,double[:] value):
+	def xyz(Vector self,double[:] value):
 		self._vector.set(&value[0])
 
 
@@ -351,20 +355,20 @@ cdef class Ball:
 	A 2D circle or a 3D sphere wrapped in a single class
 	'''
 	cdef CBall _ball
-	def __init__(self, Point center = Point(0.,0.,0.), double radius = 0.):
+	def __init__(Ball self, Point center = Point(0.,0.,0.), double radius = 0.):
 		self._ball = CBall(center._point,radius)
 
-	def __str__(self):
+	def __str__(Ball self):
 		return 'center = ' + self.center.__str__() + ' radius = %f' % (self.radius)
 
 	# Operators
-	def __eq__(self,Ball other):
+	def __eq__(Ball self,Ball other):
 		'''
 		Ball == Ball
 		'''
 		return self.center == other.center and self.radius == other.radius
 
-	def __gt__(self,object other):
+	def __gt__(Ball self,object other):
 		'''
 		self.isinside(other)
 		'''
@@ -373,7 +377,7 @@ cdef class Ball:
 		else:
 			return self.areinside(other)
 
-	def __lt__(self,object other):
+	def __lt__(Ball self,object other):
 		'''
 		not self.isinside(other)
 		'''
@@ -383,15 +387,15 @@ cdef class Ball:
 			return np.logical_not(self.areinside(other))
 
 	# Functions
-	def isempty(self):
+	def isempty(Ball self):
 		cdef bool out = self._ball.isempty()
 		return out
 	
-	def isinside(self,Point point):
+	def isinside(Ball self,Point point):
 		cdef bool out = self._ball.isinside(point._point)
 		return out
 
-	def areinside(self,double[:,:] xyz):
+	def areinside(Ball self,double[:,:] xyz):
 		cdef int ii, npoints = xyz.shape[0]
 		cdef CPoint p
 		cdef np.ndarray[np.npy_bool,ndim=1,cast=True] out = np.ndarray((npoints,),dtype=np.bool)
@@ -400,12 +404,12 @@ cdef class Ball:
 			out[ii] = self._ball.isinside(p)
 		return out
 
-	def isdisjoint(self,Ball ball):
+	def isdisjoint(Ball self,Ball ball):
 		cdef bool out = self._ball.isdisjoint(ball._ball)
 		return out
 
 	@classmethod
-	def fastBall(cls,Polygon poly):
+	def fastBall(Ball cls,Polygon poly):
 		'''
 		FASTBALL
 
@@ -429,12 +433,12 @@ cdef class Ball:
 		return out
 
 	@property
-	def center(self):
+	def center(Ball self):
 		cdef Point out = Point(0.,0.,0.)
 		out._point = self._ball.get_center()
 		return out
 	@property
-	def radius(self):
+	def radius(Ball self):
 		cdef double out = self._ball.get_radius()
 		return out
 
@@ -445,7 +449,8 @@ cdef class Polygon:
 		'''
 		cdef CPolygon _poly
 		cdef Point[:] _points
-		def __init__(self,Point[:] points):
+		cdef Point    _centroid
+		def __init__(Polygon self,Point[:] points):
 			cdef int ip, npoints = points.shape[0]
 			self._poly.set_npoints(npoints) # Already allocates npoints + 1!
 			self._points = points
@@ -455,11 +460,14 @@ cdef class Polygon:
 			# Set boundig box
 			cdef CBall bbox = CBall(self._poly)
 			self._poly.set_bbox(bbox)
+			# Compute and set centroid
+			self._centroid = self.compute_centroid()
+			self._poly.set_centroid(self._centroid._point)
 
-		def __dealloc__(self):
+		def __dealloc__(Polygon self):
 			self._poly.clear()
 
-		def __str__(self):
+		def __str__(Polygon self):
 			cdef int ip = 0
 			cdef object retstr = 'Point %d %s' % (ip,self.points[ip].__str__())
 			for ip in range(1,self.npoints):
@@ -467,7 +475,7 @@ cdef class Polygon:
 			return retstr
 
 		# Operators
-		def __getitem__(self,int i):
+		def __getitem__(Polygon self,int i):
 			'''
 			Polygon[i]
 			'''
@@ -475,13 +483,13 @@ cdef class Polygon:
 			out._point = self._poly.get_point(i)
 			return out
 
-		def __setitem__(self,int i,Point value):
+		def __setitem__(Polygon self,int i,Point value):
 			'''
 			Polygon[i] = value
 			'''
 			self._poly.set_point(i,value._point)
 
-		def __eq__(self,Polygon other):
+		def __eq__(Polygon self,Polygon other):
 			'''
 			Polygon == Polygon
 			'''
@@ -495,13 +503,13 @@ cdef class Polygon:
 					return False
 			return True
 
-		def __ne__(self,Polygon other):
+		def __ne__(Polygon self,Polygon other):
 			'''
 			Polygon != Polygon
 			'''
 			return not self.__eq__(other)
 
-		def __gt__(self,object other):
+		def __gt__(Polygon self,object other):
 			'''
 			self.isinside(other)
 			'''
@@ -510,7 +518,7 @@ cdef class Polygon:
 			else: # Assume numpy array
 				return self.areinside(other)
 
-		def __lt__(self,object other):
+		def __lt__(Polygon self,object other):
 			'''
 			not self.isinside(other)
 			'''
@@ -520,11 +528,11 @@ cdef class Polygon:
 				return np.logical_not(self.areinside(other))
 
 		# Functions
-		def isempty(self):
+		def isempty(Polygon self):
 			cdef bool out = self._poly.isempty()
 			return out
 
-		def isinside(self,Point point):
+		def isinside(Polygon self,Point point):
 			'''
 			Returns True if the point is inside the polygon, else False.
 			'''
@@ -533,7 +541,7 @@ cdef class Polygon:
 #			cdef bool out =  self._poly.isinside_wn(point._point)
 			return out
 
-		def areinside(self,double[:,:] xyz):
+		def areinside(Polygon self,double[:,:] xyz):
 			'''
 			Returns True if the points are inside the polygon, else False.
 			'''
@@ -545,8 +553,38 @@ cdef class Polygon:
 				out[ii] = self._poly.isinside(p)
 			return out
 
+		def compute_centroid(Polygon self):
+			'''
+			Returns the centroid (Point) of a (2D) polygon.
+			3D version to be implemented.
+
+			https://wwwf.imperial.ac.uk/~rn/centroid.pdf
+			https://en.wikipedia.org/wiki/Centroid
+			'''
+			cdef Point out = Point(0.,0.,0.)
+			out._point = self._poly.compute_centroid()
+			return out
+
+		def rotate(Polygon self, double[:] theta, double[:] o=np.array([])):
+			'''
+			Rotate a polygon by a theta radians 3D angle array
+			wrt to an origin Point (o).
+			'''
+			cdef int ip
+			cdef Point p
+			# Input must be a 3D angle
+			if len(theta) != 3:
+				raise ValueError('Rotation does not contain a 3D angle')
+			p = self.centroid if o.size == 0 else Point.from_array(o)
+			# Compute the rotation
+			self._poly.rotate(&theta[0],p._point)
+			# Update the points
+			for ip in range(self.npoints):
+				self._points[ip]._point = self._poly.get_point(ip)
+			return self
+
 		@classmethod
-		def from_array(cls,double[:,:] xyz):
+		def from_array(Polygon cls,double[:,:] xyz):
 			'''
 			Build a polygon from an array of points
 			of shape (npoints,3).
@@ -556,13 +594,13 @@ cdef class Polygon:
 			return cls(pointList)
 
 		@property
-		def npoints(self):
+		def npoints(Polygon self):
 			return self._poly.get_npoints() # Returns correctly
 		@property
-		def points(self):
+		def points(Polygon self):
 			return self._points
 		@points.setter
-		def points(self,Point[:] value):
+		def points(Polygon self,Point[:] value):
 			cdef int ip
 			cdef npoints = value.shape[0]
 			self._poly.set_npoints(npoints) # Already allocates npoints + 1!
@@ -571,29 +609,36 @@ cdef class Polygon:
 				self._poly.set_point(ip,value[ip]._point)
 			self._poly.set_point(npoints,value[0]._point)
 		@property
-		def bbox(self):
+		def bbox(Polygon self):
 			cdef Ball out = Ball()
 			out._ball = self._poly.get_bbox()
 			return out
 		@bbox.setter
-		def bbox(self,Ball value):
+		def bbox(Polygon self,Ball value):
 			self._poly.set_bbox(value._ball)
 		@property
-		def x(self):
+		def centroid(Polygon self):
+			return self._centroid
+		@centroid.setter
+		def centroid(Polygon self,Point value):
+			self._centroid = value
+			self._poly.set_centroid(self._centroid._point)
+		@property
+		def x(Polygon self):
 			cdef int ii, npoints = self.npoints+1
 			cdef np.ndarray[np.double_t,ndim=1] out = np.ndarray((npoints,),dtype=np.double)
 			for ii in range(npoints):
 				out[ii] = self._poly.get_point(ii).x()
 			return out
 		@property
-		def y(self):
+		def y(Polygon self):
 			cdef int ii, npoints = self.npoints+1
 			cdef np.ndarray[np.double_t,ndim=1] out = np.ndarray((npoints,),dtype=np.double)
 			for ii in range(npoints):
 				out[ii] = self._poly.get_point(ii).y()
 			return out
 		@property
-		def z(self):
+		def z(Polygon self):
 			cdef int ii, npoints = self.npoints+1
 			cdef np.ndarray[np.double_t,ndim=1] out = np.ndarray((npoints,),dtype=np.double)
 			for ii in range(npoints):

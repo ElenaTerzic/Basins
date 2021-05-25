@@ -172,8 +172,8 @@ namespace Geom
 			// Constructors and destructors
 			inline Polygon()                                     { alloc = false; n = 0; }
 			inline Polygon(const int nn)                         { set_npoints(nn); }
-			inline Polygon(const int nn, const Point &v)         { set_npoints(nn); set_points(v); }
-			inline Polygon(const int nn, const Point *v)         { set_npoints(nn); set_points(v); }
+			inline Polygon(const int nn, const Point &v)         { set_npoints(nn); set_points(v); c = compute_centroid(); }
+			inline Polygon(const int nn, const Point *v)         { set_npoints(nn); set_points(v); c = compute_centroid(); }
 			inline ~Polygon()                                    { clear(); }
 
 			// Functions
@@ -181,12 +181,14 @@ namespace Geom
 			inline void   set_point(const int i, const Point &v) { if (alloc) p[i] = v; }
 			inline void   set_points(const Point v)              { if (alloc) std::fill(p,p+n,v); }
 			inline void   set_points(const Point *v)             { if (alloc) std::memcpy(p,v,n*sizeof(Point)); }
+			inline void   set_centroid(const Point v)            { c = v; }
 			inline void   set_bbox(Ball &b)                      { bbox = b; }
 			inline void   clear()                                { n = 0; if (alloc) { delete [] p; } alloc = false; }
 			inline void   set(const int nn, const Point &v)      { set_npoints(nn); set_points(v); }
 			inline void   set(const int nn, const Point *v)      { set_npoints(nn); set_points(v); }
 			inline Point *get_points() const                     { return p; }
 			inline Point  get_point(const int i) const           { return p[i]; }
+			inline Point  get_centroid() const                   { return c; }
 			inline int    get_npoints() const                    { return n; }
 			inline Ball   get_bbox() const                       { return bbox; }
 			inline bool   isempty() const                        { return n == 0; }
@@ -195,6 +197,9 @@ namespace Geom
 			inline bool   isinside_wn(const Point &v) const      { if (bbox > v) return ( (wn_PinPoly(this,v) != 0) ? true : false ); else return false; }
 			
 			inline void   print() const                          { for(int i=0; i<n; ++i) { printf("Point %d ",i); p[i].print(); printf("\n"); } }
+			
+			Point  compute_centroid();
+			void   rotate(const double theta[3], const Point o);
 
 			// Operators
 			inline Point  operator[](int i) const                { return (i>=0) ? p[i] : p[n+i]; }
@@ -208,6 +213,7 @@ namespace Geom
 			bool   alloc;
 			int    n;
 			Point *p;
+			Point  c;
 			Ball   bbox;
 	};
 

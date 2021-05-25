@@ -4,7 +4,7 @@
 
 from __future__ import print_function, division
 
-import numpy as np, copy
+import numpy as np
 
 
 class Point(object):
@@ -37,7 +37,7 @@ class Point(object):
 		'''
 		if isinstance(other,Point) or isinstance(other,Vector):
 			return Point(self.x+other.x,self.y+other.y,self.z+other.z)
-		raiseError('Only Point + Point or Point + Vector is allowed!')
+		raise ValueError('Only Point + Point or Point + Vector is allowed!')
 
 	def __sub__(self,other):
 		'''
@@ -48,14 +48,14 @@ class Point(object):
 			return Point(self.x-other.x,self.y-other.y,self.z-other.z)
 		if isinstance(other,Point):
 			return Vector(self.x-other.x,self.y-other.y,self.z-other.z)
-		raiseError('Unknown instance in Point subtraction!')
+		raise ValueError('Unknown instance in Point subtraction!')
 
 	def __eq__(self,other):
 		'''
 		Point == Point
 		'''
 		if not isinstance(other,Point):
-			raiseError('Only Point == Point is allowed!')
+			raise ValueError('Only Point == Point is allowed!')
 		return ( (self.x == other.x) and (self.y == other.y) and (self.z == other.z) )
 
 	def __ne__(self,other):
@@ -182,7 +182,7 @@ class Vector(object):
 		Vector = Vector + Vector
 		'''
 		if not isinstance(other,Vector):
-			raiseError('Only Vector + Vector is allowed!')
+			raise ValueError('Only Vector + Vector is allowed!')
 		return Vector(self.x+other.x,self.y+other.y,self.z+other.z)
 
 	def __sub__(self,other):
@@ -190,7 +190,7 @@ class Vector(object):
 		Vector = Vector - Vector
 		'''
 		if not isinstance(other,Vector):
-			raiseError('Only Vector - Vector is allowed!')
+			raise ValueError('Only Vector - Vector is allowed!')
 		return Vector(self.x-other.x,self.y-other.y,self.z-other.z)
 
 	def __mul__(self,other):
@@ -221,7 +221,7 @@ class Vector(object):
 		Vector == Vector
 		'''
 		if not isinstance(other,Vector):
-			raiseError('Only Vector == Vector is allowed!')
+			raise ValueError('Only Vector == Vector is allowed!')
 		return ( (self.x == other.x) and (self.y == other.y) and (self.z == other.z) )
 
 	def __ne__(self,other):
@@ -289,7 +289,7 @@ class Ball(object):
 		Ball == Ball
 		'''
 		if not isinstance(other,Ball):
-			raiseError('Only Ball == Ball is allowed!')
+			raise ValueError('Only Ball == Ball is allowed!')
 		return self.center == other.center and self.radius == other.radius
 
 	def __gt__(self, other):
@@ -402,8 +402,9 @@ class Polygon(object):
 		A polygon set as an array of points. Can be either 2D or 3D.
 		'''
 		def __init__(self, points):
-			self._points = np.hstack((points,points[0]))
-			self._bbox   = Ball.fastBall(self) # Create a ball bounding box using fastBall
+			self._points   = np.hstack((points,points[0]))
+			self._bbox     = Ball.fastBall(self) # Create a ball bounding box using fastBall
+			self._centroid = self.compute_centroid()
 
 		def __str__(self):
 			retstr = 'Point %d %s' % (0,self.points[0].__str__())
@@ -489,6 +490,56 @@ class Polygon(object):
 
 			return out
 
+		def compute_centroid(self):
+			'''
+			Returns the centroid (Point) of a (2D) polygon.	
+			3D version to be implemented.
+
+			https://wwwf.imperial.ac.uk/~rn/centroid.pdf
+			https://en.wikipedia.org/wiki/Centroid
+			'''
+			Cx, Cy, A = 0, 0, 0
+			for ip in range(self.npoints):
+				Cx += (self[ip  ][0] + self[ip+1][0]) * \
+				      (self[ip  ][0] * self[ip+1][1] -
+				       self[ip+1][0] * self[ip  ][1])
+				Cy += (self[ip  ][1] + self[ip+1][1]) * \
+				      (self[ip  ][0] * self[ip+1][1] -
+				       self[ip+1][0] * self[ip  ][1])
+				A +=   self[ip  ][0] * self[ip+1][1] - \
+				       self[ip+1][0] * self[ip  ][1]
+			return Point(Cx/(3*A),Cy/(3*A),0.)
+
+		def rotate(self, theta, o=np.array([])):
+			'''
+			Rotate a polygon by a theta radians 3D angle array 
+			wrt to an origin Point (o).
+			'''
+			# Input must be a 3D angle
+			if len(theta) != 3:
+				raise ValueError('Rotation does not contain a 3D angle')
+			o = self.centroid if o.size == 0 else Point.from_array(o)
+			# Compute sin and cos
+			cx, sx = np.cos(theta[0]), np.sin(theta[0])
+			cy, sy = np.cos(theta[1]), np.sin(theta[1])
+			cz, sz = np.cos(theta[2]), np.sin(theta[2])
+			# Rotation matrices
+			Rx = np.array([[   1,   0,   0],
+			               [   0,  cx, -sx],
+			               [   0,  sx,  cx]])
+			Ry = np.array([[  cy,   0,  sy],
+			               [   0,   1,   0],
+			               [ -sy,   0,  cy]])
+			Rz = np.array([[  cz, -sz,   0],
+			               [  sz,  cz,   0],
+			               [   0,   0,   1]])
+			# Compute rotation matrix R
+			R = Rx @ Ry @ Rz
+			# Project the points
+			for ip in range(self.npoints): # Make sure to ge the last one too
+				self._points[ip].xyz = np.matmul(R,self._points[ip].xyz - o.xyz) + o.xyz
+			return self
+
 		@classmethod
 		def from_array(cls,xyz):
 			'''
@@ -513,6 +564,12 @@ class Polygon(object):
 		@bbox.setter
 		def bbox(self,value):
 			self._bbox = value
+		@property
+		def centroid(self):
+			return self._centroid
+		@centroid.setter
+		def centroid(self,value):
+			self._centroid = value
 		@property
 		def x(self):
 			return np.array([p.x for p in self._points])

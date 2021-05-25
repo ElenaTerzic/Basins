@@ -30,6 +30,7 @@ DEBUGGING     = OFF
 # Automatically detect if the intel compilers are installed and use
 # them, otherwise default to the GNU compilers
 PYTHON = python
+PIP    = pip
 ifeq ($(FORCE_GCC),ON) 
 	# Forcing the use of GCC
 	# C Compiler
@@ -119,14 +120,25 @@ DFLAGS =
 
 # One rule to compile them all, one rule to find them,
 # One rule to bring them all and in the compiler link them.
-all: python
+all: requirements python install
 	@echo ""
+	@echo "Basins deployed successfully"
+
 
 # Python
 #
 python: setup.py
-	@CFLAGS="${CFLAGS}" CXXFLAGS="${CXXFLAGS}" ${PYTHON} $< build_ext --inplace
+	@CFLAGS="${CFLAGS}" CXXFLAGS="${CXXFLAGS}" USE_CPP="${USE_CPP}" ${PYTHON} $< build_ext --inplace
 	@echo "Python programs deployed successfully"
+
+requirements: requirements.txt
+	@${PIP} install -r $<
+
+install: 
+	@${PIP} install .
+
+install_dev: 
+	@${PIP} install -e .
 
 
 # Generic object makers
@@ -147,8 +159,11 @@ python: setup.py
 # Clean
 #
 clean:
-	-@rm -f *.o *.pyc *.c *.cpp *.html
-	-@rm -rf __pycache__ 
+	-@cd Basins; rm -f *.o *.pyc *.c *.cpp *.html
+	-@cd Basins; rm -rf __pycache__ 
+	-@rm -rf  build
 
 uninstall: clean
-	-@rm -rf  *.so build
+	-@cd Basins; rm *.so
+	-@${PIP} uninstall Basins
+	-@rm -rf Basins.egg-info

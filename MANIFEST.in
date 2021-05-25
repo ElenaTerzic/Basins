@@ -1,0 +1,3 @@
+include Basins/shapes/*.npy
+exclude Basins/src/*.cpp
+exclude Basins/*.cpp

@@ -8,8 +8,8 @@ import matplotlib.pyplot as plt
 
 import Basins
 
+xyz = np.array([[0.,0. ,0.],[.5,.25,0.],[1.,0.,0.],[.7,1.,0.],[0.,1.,0.]])
 
-xyz  = np.array([[0.,0. ,0.],[.5,.25,0.],[1.,0.,0.],[.7,1.,0.],[0.,1.,0.]])
 poly = Basins.Polygon.from_array(xyz)
 print(poly)
 
@@ -25,6 +25,7 @@ plt.figure(1,(8,6),dpi=100)
 plt.plot(poly.x,poly.y,'o-k')
 plt.scatter(p1.x,p1.y,marker='x',c='r' if poly < p1 else 'b') # Blue if inside, red if outside
 plt.scatter(p2.x,p2.y,marker='x',c='r' if poly < p2 else 'b') # Blue if inside, red if outside
+plt.scatter(poly.centroid.x,poly.centroid.y,marker='x',c='k')
 
 # Check if an array of points are inside
 xyzp = np.array([[.5,.5,0.],[1.,.35,0.],[0.2,0.5,0.],[.35,.15,0.]])
@@ -32,6 +33,21 @@ inside = poly > xyzp
 
 plt.figure(2,(8,6),dpi=100)
 plt.plot(poly.x,poly.y,'o-k')
+plt.xlim((-0.2, 1.2))
+plt.ylim((-0.2, 1.2))
+plt.scatter(poly.centroid.x,poly.centroid.y,marker='x',c='k')
+
+for ip in range(xyzp.shape[0]):
+	print('p%d = '%ip,xyzp[ip,:],'inside' if inside[ip] else 'outside')
+	plt.scatter(xyzp[ip,0],xyzp[ip,1],marker='x',c='b' if inside[ip] else 'r') # Blue if inside, red if outside
+
+# Try again by rotating 90 degrees
+poly.rotate(np.array([0.,0.,np.pi/4]))
+inside = poly > xyzp
+
+plt.figure(3,(8,6),dpi=100)
+plt.plot(poly.x,poly.y,'o-k')
+plt.scatter(poly.centroid.x,poly.centroid.y,marker='x',c='k')
 
 for ip in range(xyzp.shape[0]):
 	print('p%d = '%ip,xyzp[ip,:],'inside' if inside[ip] else 'outside')
