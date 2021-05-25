@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 import Basins
 
-# Load Skadar mid-res basin
+# Load Skadar basin
 basin = Basins.skadar_highres
 print(basin)
 
