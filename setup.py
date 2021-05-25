@@ -27,7 +27,7 @@ setup(
 	),
     long_description=readme,
     url='https://github.com/ArnauMiro/MEP.git',
-    packages=find_packages(exclude=('Examples','doc')),
+    packages=find_packages(exclude=('Examples','doc','ShapefileExtractor')),
 	include_package_data=True,
 	install_requires=['numpy','cython']
 )
