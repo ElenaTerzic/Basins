@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import Basins
 
 # Load Skadar mid-res basin
-basin = Basins.skadar_midres
+basin = Basins.skadar_highres
 print(basin)
 
 # Check if some points are inside
