@@ -26,7 +26,7 @@ setup(
 		annotate       = True                      # This is to generate a report on the conversion to C code
 	),
     long_description=readme,
-    url='https://github.com/ArnauMiro/MEP.git',
+    url='https://github.com/ElenaTerzic/Basins.git',
     packages=find_packages(exclude=('Examples','doc','ShapefileExtractor')),
 	include_package_data=True,
 	install_requires=['numpy','cython']
