@@ -10,7 +10,9 @@ from .basic import Point, Ball, Polygon
 
 
 class Basin(Polygon):
-	"""docstring for Basin"""
+	'''
+	A region defined by a polygon.
+	'''
 	def __init__(self,abbrev,name,points):
 		super(Basin, self).__init__(points)
 		self._abbrev = abbrev
@@ -42,6 +44,93 @@ class Basin(Polygon):
 	@property
 	def name(self):
 		return self._name
+
+
+class ComposedBasin(object):
+	'''
+	A region composed by an array of basins
+	'''
+	def __init__(self,abbrev,name,basins):
+		self._abbrev = abbrev
+		self._name   = name
+		self._list   = basins
+	
+	# Operators
+	def __getitem__(self,i):
+		'''
+		Polygon[i]
+		'''
+		return self._list[i]
+
+	def __setitem__(self,i,value):
+		'''
+		Polygon[i] = value
+		'''
+		self._list[i] = value
+
+	def __iter__(self):
+		return self._list.__iter__()
+
+	def __gt__(self, other):
+		'''
+		self.isinside(other)
+		'''
+		if isinstance(other,Point):
+			return self.isinside(other) # Return true if Point inside Polygon
+		else: # Assume numpy array
+			return self.areinside(other)
+
+	def __lt__(self,other):
+		'''
+		not self.isinside(other)
+		'''
+		if isinstance(other,Point):
+			return not self.isinside(other)
+		else:
+			return np.logical_not(self.areinside(other))
+		
+	# Functions
+	def isempty(self):
+		return len(self.basins) == 0
+
+	def isinside(self,point,algorithm='wn'):
+		'''
+		Returns True if the point is inside the polygon, else False.
+		'''
+		for basin in self.basins:
+			if basin.isinside(point,algorithm=algorithm): return True
+		return False
+
+	def areinside(self,xyz,algorithm='wn'):
+		'''
+		Returns True if the points are inside the polygon, else False.
+		'''
+		out = np.zeros((xyz.shape[0],len(self.basins)),dtype=bool)
+		for ii,basin in enumerate(self.basins):
+			out[:,ii] = basin.areinside(xyz,algorithm=algorithm)
+		return np.logical_or(out,axis=1)
+
+	def compute_centroid(self):
+		'''
+		Returns the centroid.
+		'''
+		out = np.array([0.,0.,0.])
+		for basin in self.basins:
+			out += basin.compute_centroid().xyz
+		out /= len(self.basins)
+		return Point.from_array(out)
+
+	@property
+	def abbrev(self):
+		return self._abbrev
+
+	@property
+	def name(self):
+		return self._name
+
+	@property
+	def basins(self):
+		return self._list
 
 
 class Line(object):
