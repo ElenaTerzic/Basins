@@ -17,7 +17,7 @@ for idx in range(len(sf)):
 	rec = sf.record(idx)
 	if 'Adriatic' in rec[0]: print(idx,rec[0])
 
-# Extract Mediterranean Sea - Western Basin
+# Extract Adriatic Sea
 print(sf.record(41))
 shp = sf.shape(41)
 xy  = np.array(shp.points)
