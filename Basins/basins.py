@@ -24,4 +24,5 @@ skadar_midres  = Basin.from_npy('skadar', 'Skadar Lake', os.path.join(SHAPESPATH
 skadar_highres = Basin.from_npy('skadar', 'Skadar Lake', os.path.join(SHAPESPATH,'Skadar_HydroLAKES.npy'),downsample=1)
 
 # World Seas shapefile
-adr = Basin.from_npy('adr', 'Adriatic', os.path.join(SHAPESPATH,'Adriatic_WorldSeas.npy'),downsample=4)
+adr    = Basin.from_npy('adr', 'Adriatic'      , os.path.join(SHAPESPATH,'Adriatic_WorldSeas.npy'),downsample=4)
+socean = Basin.from_npy('so' , 'Southern Ocean', os.path.join(SHAPESPATH,'SouthernOcean_WorldSeas.npy'),downsample=4)
