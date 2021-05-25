@@ -132,6 +132,10 @@ class ComposedBasin(object):
 	def basins(self):
 		return self._list
 
+	@property
+	def centroid(self):
+		return self.compute_centroid()
+
 
 class Line(object):
 	'''
