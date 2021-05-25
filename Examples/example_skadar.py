@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import Basins
 
 # Load Skadar basin
-basin = Basins.skadar_highres
+basin = Basins.hydrolakes.skadar_highres
 print(basin)
 
 # Check if some points are inside

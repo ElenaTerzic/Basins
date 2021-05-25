@@ -5,9 +5,7 @@
 __VERSION__ = 1.0
 
 from .basic    import Point, Ball, Polygon
-from .basins   import med, wmed, emed, socean
-from .basins   import adr 
-from .basins   import skadar_lowres, skadar_midres, skadar_highres, kotor
 from .entities import Basin, ComposedBasin, Line, SimpleRectangle, Rectangle, Plane, SimpleCube, Cube
+from .         import generic, hydrolakes, worldseas
 
-del basic, basins, entities
+del basic, entities
