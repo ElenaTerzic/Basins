@@ -8,8 +8,10 @@ import matplotlib.pyplot as plt
 
 import shapefile
 
+FILENAME = '/home/arnaumiro/projects/DATA/ShapeFiles/HydroLAKES/HydroLAKES_polys_v10'
+
 # Read HydroLAKES DB
-sf  = shapefile.Reader("HydroLAKES_polys_v10")
+sf  = shapefile.Reader(FILENAME)
 
 # Loop every lake
 #for idx in range(len(sf)):
@@ -44,15 +46,14 @@ plt.plot(xy[:,0],xy[:,1],'.k')
 d    = np.diff(xy,axis=0)
 norm = np.sqrt(np.sum(d*d,axis=1))
 ids  = np.where(norm > 100.*np.min(norm))[0]
-print(ids)
+st   = ids[0]+1
+plt.plot(xy[:st,0],xy[:st,1],'k')
 
 # Save Skadar lake as xyz points
-xyz = np.zeros((980,3),dtype=np.double)
-xyz[:,0] = xy[:980,0]
-xyz[:,1] = xy[:980,1]
+xyz = np.zeros((st,3),dtype=np.double)
+xyz[:,0] = xy[:st,0]
+xyz[:,1] = xy[:st,1]
 
 np.save('../Basins/shapes/Skadar_HydroLAKES.npy',xyz)
 
-plt.plot(xy[:980:6,0],xy[:980:6,1],'k')
-print(xy[:980:6,:].shape)
 plt.show()
