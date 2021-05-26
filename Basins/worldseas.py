@@ -27,3 +27,4 @@ socean = Basin.from_npy('so' , 'Southern Ocean', os.path.join(SHAPESPATH,'Southe
 # Composed basins
 wmed   = ComposedBasin('wmed', 'Western Mediterranean', [alb,bal,lig,tyr,west])
 emed   = ComposedBasin('emed', 'Eastern Mediterranean', [adr,aeg,ion,east])
+med    = ComposedBasin('med' , 'Mediterranean Sea'    , [alb,bal,lig,tyr,west,adr,aeg,ion,east])
