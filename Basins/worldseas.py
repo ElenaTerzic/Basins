@@ -22,6 +22,7 @@ aeg    = Basin.from_npy('aeg' , 'Aegean Sea'    , os.path.join(SHAPESPATH,'Aegea
 ion    = Basin.from_npy('ion' , 'Ionian Sea'    , os.path.join(SHAPESPATH,'Ionian_WorldSeas.npy'),downsample=4)
 east   = Basin.from_npy('east', 'Eastern Basin' , os.path.join(SHAPESPATH,'EastMed_WorldSeas.npy'),downsample=4)
 
+satlan = Basin.from_npy('sa' , 'South Atlantic', os.path.join(SHAPESPATH,'SouthAtlantic_WorldSeas.npy'),downsample=4)
 socean = Basin.from_npy('so' , 'Southern Ocean', os.path.join(SHAPESPATH,'SouthernOcean_WorldSeas.npy'),downsample=4)
 
 # Composed basins
