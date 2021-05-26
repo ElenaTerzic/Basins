@@ -18,6 +18,11 @@ class Basin(Polygon):
 		self._abbrev = abbrev
 		self._name   = name
 
+	def __str__(self):
+		retstr = 'Basin %s (%s) with %d points:\n' % (self.name,self.abbrev,self.npoints)
+		retstr += super(Basin, self).__str__()
+		return retstr
+
 	@classmethod
 	def from_array(cls,abbrev,name,xyz):
 		'''
@@ -54,7 +59,13 @@ class ComposedBasin(object):
 		self._abbrev = abbrev
 		self._name   = name
 		self._list   = basins
-	
+
+	def __str__(self):
+		retstr = 'Composed Basin of %d basins:\n' % (len(self.basins))
+		for basin in self.basins:
+			retstr += basin.__str__()
+		return retstr
+
 	# Operators
 	def __getitem__(self,i):
 		'''
