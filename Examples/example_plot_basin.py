@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import Basins
 
 # Load  basin
-basin = Basins.worldseas.satlan
+basin = Basins.worldseas.kotor
 print(basin)
 
 # Plot
