@@ -20,9 +20,10 @@ west   = Basin.from_npy('west', 'Western Basin' , os.path.join(SHAPESPATH,'WestM
 adr    = Basin.from_npy('adr' , 'Adriatic Sea'  , os.path.join(SHAPESPATH,'Adriatic_WorldSeas.npy'),downsample=4)
 aeg    = Basin.from_npy('aeg' , 'Aegean Sea'    , os.path.join(SHAPESPATH,'Aegean_WorldSeas.npy'),downsample=4)
 ion    = Basin.from_npy('ion' , 'Ionian Sea'    , os.path.join(SHAPESPATH,'Ionian_WorldSeas.npy'),downsample=4)
+east   = Basin.from_npy('east', 'Eastern Basin' , os.path.join(SHAPESPATH,'EastMed_WorldSeas.npy'),downsample=4)
 
 socean = Basin.from_npy('so' , 'Southern Ocean', os.path.join(SHAPESPATH,'SouthernOcean_WorldSeas.npy'),downsample=4)
 
 # Composed basins
-wmed   = ComposedBasin('wmed', 'Western Mediterranean', [alb,west,bal,lig,tyr])
-emed   = ComposedBasin('emed', 'Eastern Mediterranean', [adr,aeg])
+wmed   = ComposedBasin('wmed', 'Western Mediterranean', [alb,bal,lig,tyr,west])
+emed   = ComposedBasin('emed', 'Eastern Mediterranean', [adr,aeg,ion,east])
