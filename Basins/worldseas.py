@@ -19,6 +19,7 @@ tyr    = Basin.from_npy('tyr' , 'Tyrrhenian Sea', os.path.join(SHAPESPATH,'Tyrrh
 west   = Basin.from_npy('west', 'Western Basin' , os.path.join(SHAPESPATH,'WestMed_WorldSeas.npy'),downsample=4)
 adr    = Basin.from_npy('adr' , 'Adriatic Sea'  , os.path.join(SHAPESPATH,'Adriatic_WorldSeas.npy'),downsample=4)
 aeg    = Basin.from_npy('aeg' , 'Aegean Sea'    , os.path.join(SHAPESPATH,'Aegean_WorldSeas.npy'),downsample=4)
+ion    = Basin.from_npy('ion' , 'Ionian Sea'    , os.path.join(SHAPESPATH,'Ionian_WorldSeas.npy'),downsample=4)
 
 socean = Basin.from_npy('so' , 'Southern Ocean', os.path.join(SHAPESPATH,'SouthernOcean_WorldSeas.npy'),downsample=4)
 
