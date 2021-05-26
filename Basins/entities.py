@@ -104,21 +104,21 @@ class ComposedBasin(object):
 	def isempty(self):
 		return len(self.basins) == 0
 
-	def isinside(self,point,algorithm='wn'):
+	def isinside(self,point):
 		'''
 		Returns True if the point is inside the polygon, else False.
 		'''
 		for basin in self.basins:
-			if basin.isinside(point,algorithm=algorithm): return True
+			if basin.isinside(point): return True
 		return False
 
-	def areinside(self,xyz,algorithm='wn'):
+	def areinside(self,xyz):
 		'''
 		Returns True if the points are inside the polygon, else False.
 		'''
 		out = np.zeros((xyz.shape[0],len(self.basins)),dtype=bool)
 		for ii,basin in enumerate(self.basins):
-			out[:,ii] = basin.areinside(xyz,algorithm=algorithm)
+			out[:,ii] = basin.areinside(xyz)
 		return np.logical_or(out,axis=1)
 
 	def compute_centroid(self):
