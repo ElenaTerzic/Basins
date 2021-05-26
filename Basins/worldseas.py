@@ -23,9 +23,13 @@ ion    = Basin.from_npy('ion' , 'Ionian Sea'    , os.path.join(SHAPESPATH,'Ionia
 east   = Basin.from_npy('east', 'Eastern Basin' , os.path.join(SHAPESPATH,'EastMed_WorldSeas.npy'),downsample=4)
 
 satlan = Basin.from_npy('sa' , 'South Atlantic', os.path.join(SHAPESPATH,'SouthAtlantic_WorldSeas.npy'),downsample=4)
+spaci1 = Basin.from_npy('sp1', 'South Pacific1', os.path.join(SHAPESPATH,'SouthPacific1_WorldSeas.npy'),downsample=4)
+spaci1 = Basin.from_npy('sp2', 'South Pacific2', os.path.join(SHAPESPATH,'SouthPacific2_WorldSeas.npy'),downsample=4)
 socean = Basin.from_npy('so' , 'Southern Ocean', os.path.join(SHAPESPATH,'SouthernOcean_WorldSeas.npy'),downsample=4)
 
 # Composed basins
 wmed   = ComposedBasin('wmed', 'Western Mediterranean', [alb,bal,lig,tyr,west])
 emed   = ComposedBasin('emed', 'Eastern Mediterranean', [adr,aeg,ion,east])
 med    = ComposedBasin('med' , 'Mediterranean Sea'    , [alb,bal,lig,tyr,west,adr,aeg,ion,east])
+
+spacif = ComposedBasin('sp', 'South Pacific', [spaci1,spaci2])
