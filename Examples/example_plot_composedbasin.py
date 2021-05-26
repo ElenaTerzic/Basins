@@ -9,12 +9,14 @@ import matplotlib.pyplot as plt
 import Basins
 
 # Load  basin
-basin = Basins.worldseas.satlan
+basin = Basins.worldseas.med
 print(basin)
 
 # Plot
-plt.figure(1,(8,6),dpi=100)
-plt.plot(basin.x,basin.y,'o-k')
+fig = plt.figure(1,(8,6),dpi=100)
+ax  = fig.add_subplot(1,1,1)
+for b in basin:
+	plt.plot(b.x,b.y,'o-k')
 plt.scatter(basin.centroid.x,basin.centroid.y,marker='x',c='k')
 
 plt.show()
