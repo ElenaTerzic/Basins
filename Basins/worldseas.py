@@ -27,6 +27,8 @@ spaci1 = Basin.from_npy('sp1', 'South Pacific1', os.path.join(SHAPESPATH,'SouthP
 spaci1 = Basin.from_npy('sp2', 'South Pacific2', os.path.join(SHAPESPATH,'SouthPacific2_WorldSeas.npy'),downsample=4)
 socean = Basin.from_npy('so' , 'Southern Ocean', os.path.join(SHAPESPATH,'SouthernOcean_WorldSeas.npy'),downsample=4)
 
+kotor  = Basin.from_npy('kotor', 'Bay of Kotor', os.path.join(SHAPESPATH,'Kotor_WorldSeas.npy'),downsample=4)
+
 # Composed basins
 wmed   = ComposedBasin('wmed', 'Western Mediterranean', [alb,bal,lig,tyr,west])
 emed   = ComposedBasin('emed', 'Eastern Mediterranean', [adr,aeg,ion,east])
