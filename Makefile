@@ -57,6 +57,9 @@ else
 	endif
 endif
 
+# Defines
+#
+DFLAGS =
 
 # Compiler flags
 #
@@ -80,8 +83,8 @@ ifeq ($(CC),gcc)
 	endif
 	# OpenMP flag
 	ifeq ($(OPENMP_PARALL),ON)
-		CFLAGS   += -fopenmp
-		CXXFLAGS += -fopenmp
+		CFLAGS   += -fopenmp -DUSE_OMP
+		CXXFLAGS += -fopenmp -DUSE_OMP
 	endif
 else
 	# Using INTEL as a compiler
@@ -103,19 +106,14 @@ else
 	endif
 	# OpenMP flag
 	ifeq ($(OPENMP_PARALL),ON)
-		CFLAGS   += -qopenmp
-		CXXFLAGS += -qopenmp
+		CFLAGS   += -qopenmp -DUSE_OMP
+		CXXFLAGS += -qopenmp -DUSE_OMP
 	endif
 endif
 # C++ standard
 CXXFLAGS += -std=c++11
 # Header includes
 CXXFLAGS += -I${INC_PATH}
-
-
-# Defines
-#
-DFLAGS =
 
 
 # One rule to compile them all, one rule to find them,
@@ -128,7 +126,7 @@ all: requirements python install
 # Python
 #
 python: setup.py
-	@CFLAGS="${CFLAGS}" CXXFLAGS="${CXXFLAGS}" USE_CPP="${USE_CPP}" ${PYTHON} $< build_ext --inplace
+	@CFLAGS="${CFLAGS}" CXXFLAGS="${CXXFLAGS}" ${PYTHON} $< build_ext --inplace
 	@echo "Python programs deployed successfully"
 
 requirements: requirements.txt

@@ -11,6 +11,17 @@
 #include "matrixMN.h"
 #include "geometry.h"
 
+#ifdef USE_OMP
+#include <omp.h>
+#define OMP_THREAD_NUM  omp_get_thread_num()
+#define OMP_NUM_THREADS omp_get_num_threads()
+#define OMP_MAX_THREADS omp_get_max_threads()
+#else
+#define OMP_THREAD_NUM  0
+#define OMP_NUM_THREADS 1
+#define OMP_MAX_THREADS 1
+#endif
+
 namespace Geom
 {
 	/* FASTBALL
@@ -121,7 +132,11 @@ namespace Geom
 		int cn = 0; // The crossing number counter
 
 		// Loop through all edges of the Polygon
-		for (int ii=0; ii<poly->get_npoints(); ++ii) {
+		#ifdef USE_OMP
+		#pragma omp parallel reduction(+:cn)
+		{
+		#endif
+		for (int ii=OMP_THREAD_NUM; ii<poly->get_npoints(); ii+=OMP_NUM_THREADS) {
 			if ( (((*poly)[ii][1] <= P[1]) && ((*poly)[ii+1][1] >  P[1]))         // an upward crossing
 			  || (((*poly)[ii][1] >  P[1]) && ((*poly)[ii+1][1] <= P[1])) ) {     // a downward crossing
 
@@ -131,6 +146,9 @@ namespace Geom
 					++cn; // A valid crossing of y=P.y right of P.x		
 			}
 		}
+		#ifdef USE_OMP
+		}
+		#endif
 		return(cn & 1); // 0 if even (out), and 1 if  odd (in)
 	}
 
@@ -155,7 +173,11 @@ namespace Geom
 		int wn = 0; // The  winding number counter
 
 		// Loop through all edges of the polygon
-		for (int ii=0; ii<poly->get_npoints(); ++ii) {   // edge from V[i] to  V[i+1]
+		#ifdef USE_OMP
+		#pragma omp parallel reduction(+:wn)
+		{
+		#endif
+		for (int ii=OMP_THREAD_NUM; ii<poly->get_npoints(); ii+=OMP_NUM_THREADS) {   // edge from V[i] to  V[i+1]
 			if ((*poly)[ii][1] <= P[1]) {   	// start y <= P.y
 				if ((*poly)[ii+1][1] > P[1])			// an upward crossing
 					if ( P.isLeft((*poly)[ii],(*poly)[ii+1]) > 0 ) // P left of  edge
@@ -166,6 +188,9 @@ namespace Geom
 						--wn; // have  a valid down intersect
 			}
 		}
+		#ifdef USE_OMP
+		}
+		#endif
 		return wn;
 	}
 
