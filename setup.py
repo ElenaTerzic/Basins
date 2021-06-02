@@ -8,7 +8,7 @@ import sys, os, numpy as np
 from setuptools import setup, Extension, find_packages
 from Cython.Build import cythonize
 
-_USE_COMPILED = False
+_USE_COMPILED = True
 try:
 	_USE_COMPILED = True if os.environ['USE_COMPILED'] == 'ON' else False
 except:
@@ -32,7 +32,7 @@ setup(
 	version="1.2.0",
 	ext_modules=cythonize(modules_list,
 		language_level = str(sys.version_info[0]), # This is to specify python 3 synthax
-		annotate       = True                      # This is to generate a report on the conversion to C code
+		annotate       = False                     # This is to generate a report on the conversion to C code
 	),
     long_description=readme,
     url='https://github.com/ElenaTerzic/Basins.git',
