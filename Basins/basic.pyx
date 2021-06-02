@@ -76,6 +76,7 @@ cdef extern from "geometry.h" namespace "Geom":
 		bool    isinside(const CPoint &v) const
 		bool    isinside_cn(const CPoint &v) const
 		bool    isinside_wn(const CPoint &v) const
+		void    areinside(bool *out, const double *xyz, const int np)
 		CPoint  compute_centroid()
 		void    rotate(const double theta[3], const CPoint o);
 
@@ -536,8 +537,8 @@ cdef class Polygon:
 			'''
 			Returns True if the point is inside the polygon, else False.
 			'''
-			cdef bool out = self._poly.isinside(point._point)
-#			cdef bool out =  self._poly.isinside_cn(point._point)
+#			cdef bool out = self._poly.isinside(point._point)
+			cdef bool out =  self._poly.isinside_cn(point._point)
 #			cdef bool out =  self._poly.isinside_wn(point._point)
 			return out
 
@@ -545,12 +546,9 @@ cdef class Polygon:
 			'''
 			Returns True if the points are inside the polygon, else False.
 			'''
-			cdef int ii, npoints = xyz.shape[0]
-			cdef CPoint p
+			cdef npoints = xyz.shape[0]
 			cdef np.ndarray[np.npy_bool,ndim=1,cast=True] out = np.ndarray((npoints,),dtype=np.bool)
-			for ii in range(npoints):
-				p       = CPoint(xyz[ii,0],xyz[ii,1],xyz[ii,2])
-				out[ii] = self._poly.isinside(p)
+			self._poly.areinside(<bool*>&out[0],&xyz[0,0],npoints)
 			return out
 
 		def compute_centroid(Polygon self):

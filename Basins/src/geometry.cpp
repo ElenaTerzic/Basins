@@ -128,9 +128,22 @@ namespace Geom
 		Users of this code must verify correctness for their application.
 	*/
 	int cn_PinPoly(const Polygon *poly, const Point &P) {
-
 		int cn = 0; // The crossing number counter
+		// Loop through all edges of the Polygon
+		for (int ii=OMP_THREAD_NUM; ii<poly->get_npoints(); ii+=OMP_NUM_THREADS) {
+			if ( (((*poly)[ii][1] <= P[1]) && ((*poly)[ii+1][1] >  P[1]))         // an upward crossing
+			  || (((*poly)[ii][1] >  P[1]) && ((*poly)[ii+1][1] <= P[1])) ) {     // a downward crossing
 
+			  	// Compute  the actual edge-ray intersect x-coordinate
+				double vt = (double)( (P[1]  - (*poly)[ii][1]) / ((*poly)[ii+1][1] - (*poly)[ii][1]) );
+				if (P[0] <  (*poly)[ii][0] + vt * ((*poly)[ii+1][0] - (*poly)[ii][0]))  // P.x < intersect
+					++cn; // A valid crossing of y=P.y right of P.x		
+			}
+		}
+		return(cn & 1); // 0 if even (out), and 1 if  odd (in)
+	}
+	int cn_PinPoly_OMP(const Polygon *poly, const Point &P) {
+		int cn = 0; // The crossing number counter
 		// Loop through all edges of the Polygon
 		#ifdef USE_OMP
 		#pragma omp parallel reduction(+:cn)
@@ -169,9 +182,23 @@ namespace Geom
 		Users of this code must verify correctness for their application.
 	*/
 	int wn_PinPoly(const Polygon *poly, const Point &P) {
-
 		int wn = 0; // The  winding number counter
-
+		// Loop through all edges of the polygon
+		for (int ii=OMP_THREAD_NUM; ii<poly->get_npoints(); ii+=OMP_NUM_THREADS) {   // edge from V[i] to  V[i+1]
+			if ((*poly)[ii][1] <= P[1]) {   	// start y <= P.y
+				if ((*poly)[ii+1][1] > P[1])			// an upward crossing
+					if ( P.isLeft((*poly)[ii],(*poly)[ii+1]) > 0 ) // P left of  edge
+						++wn; // have  a valid up intersect
+			} else {                        // start y > P.y (no test needed)
+				if ((*poly)[ii+1][1] <= P[1])	// a downward crossing
+					if ( P.isLeft((*poly)[ii],(*poly)[ii+1]) < 0 ) // P left of  edge
+						--wn; // have  a valid down intersect
+			}
+		}
+		return wn;
+	}
+	int wn_PinPoly_OMP(const Polygon *poly, const Point &P) {
+		int wn = 0; // The  winding number counter
 		// Loop through all edges of the polygon
 		#ifdef USE_OMP
 		#pragma omp parallel reduction(+:wn)
@@ -192,6 +219,35 @@ namespace Geom
 		}
 		#endif
 		return wn;
+	}
+
+	/* AREINSIDE
+
+		Returns True if the points are inside the polygon, else False.
+		out needs to come preallocated at np.
+	*/
+	void Polygon::areinside(bool *out, const double *xyz, const int np) {
+		if (np > this->n) {
+			// If the number of points is greater than the number of points of the
+			// polygon, it is better to run the normal isinside
+			#ifdef USE_OMP
+			#pragma omp parallel shared(out,xyz) firstprivate(np)
+			{
+			#endif
+			for(int ip=OMP_THREAD_NUM; ip<np; ip+=OMP_NUM_THREADS) {
+				Point v(&xyz[3*ip]);
+				out[ip] = (this->bbox > v) ? ( (cn_PinPoly(this,v) != 0) ? true : false ) : false;
+			}
+			#ifdef USE_OMP
+			}
+			#endif
+		} else {
+			// Run the OMP version
+			for(int ip=0; ip<np; ++ip) {
+				Point v(&xyz[3*ip]);
+				out[ip] = (this->bbox > v) ? ( (cn_PinPoly_OMP(this,v) != 0) ? true : false ) : false;
+			}
+		}
 	}
 
 	/* COMPUTE_CENTROID

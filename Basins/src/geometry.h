@@ -22,7 +22,9 @@ namespace Geom
 	class Polygon;
 
 	int cn_PinPoly(const Polygon *poly, const Point &P); // Return:  0 = outside, 1 = inside
+	int cn_PinPoly_OMP(const Polygon *poly, const Point &P); // Return:  0 = outside, 1 = inside
 	int wn_PinPoly(const Polygon *poly, const Point &P); // Return:  =0 only when P is outside
+	int wn_PinPoly_OMP(const Polygon *poly, const Point &P); // Return:  =0 only when P is outside
 
 
 	class Point {
@@ -192,14 +194,15 @@ namespace Geom
 			inline int    get_npoints() const                    { return n; }
 			inline Ball   get_bbox() const                       { return bbox; }
 			inline bool   isempty() const                        { return n == 0; }
-			inline bool   isinside(const Point &v) const         { if (bbox > v) return ( (wn_PinPoly(this,v) != 0) ? true : false ); else return false; }
-			inline bool   isinside_cn(const Point &v) const      { if (bbox > v) return ( (cn_PinPoly(this,v) == 1) ? true : false ); else return false; }
-			inline bool   isinside_wn(const Point &v) const      { if (bbox > v) return ( (wn_PinPoly(this,v) != 0) ? true : false ); else return false; }
-			
+			inline bool   isinside(const Point &v) const         { if (bbox > v) return ( (wn_PinPoly_OMP(this,v) != 0) ? true : false ); else return false; }
+			inline bool   isinside_cn(const Point &v) const      { if (bbox > v) return ( (cn_PinPoly_OMP(this,v) == 1) ? true : false ); else return false; }
+			inline bool   isinside_wn(const Point &v) const      { if (bbox > v) return ( (wn_PinPoly_OMP(this,v) != 0) ? true : false ); else return false; }
+
 			inline void   print() const                          { for(int i=0; i<n; ++i) { printf("Point %d ",i); p[i].print(); printf("\n"); } }
 			
 			Point  compute_centroid();
 			void   rotate(const double theta[3], const Point o);
+			void   areinside(bool *out, const double *xyz, const int np);
 
 			// Operators
 			inline Point  operator[](int i) const                { return (i>=0) ? p[i] : p[n+i]; }

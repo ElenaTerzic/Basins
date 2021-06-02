@@ -466,7 +466,7 @@ class Polygon(object):
 		def isempty(self):
 			return self.npoints == 0
 
-		def isinside(self,point,algorithm='wn'):
+		def isinside(self,point,algorithm='cn'):
 			'''
 			Returns True if the point is inside the polygon, else False.
 			'''
@@ -479,7 +479,7 @@ class Polygon(object):
 			else:
 				return False
 
-		def areinside(self,xyz,algorithm='wn'):
+		def areinside(self,xyz,algorithm='cn'):
 			'''
 			Returns True if the points are inside the polygon, else False.
 			'''
