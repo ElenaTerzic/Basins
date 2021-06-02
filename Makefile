@@ -23,6 +23,7 @@ VECTORIZATION = ON
 OPENMP_PARALL = OFF
 FORCE_GCC     = OFF
 DEBUGGING     = OFF
+USE_COMPILED  = ON
 
 
 # Compilers
@@ -126,7 +127,7 @@ all: requirements python install
 # Python
 #
 python: setup.py
-	@CFLAGS="${CFLAGS}" CXXFLAGS="${CXXFLAGS}" ${PYTHON} $< build_ext --inplace
+	@CFLAGS="${CFLAGS}" CXXFLAGS="${CXXFLAGS}" USE_COMPILED="${USE_COMPILED}" ${PYTHON} $< build_ext --inplace
 	@echo "Python programs deployed successfully"
 
 requirements: requirements.txt
