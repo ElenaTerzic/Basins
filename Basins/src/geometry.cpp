@@ -226,28 +226,51 @@ namespace Geom
 		Returns True if the points are inside the polygon, else False.
 		out needs to come preallocated at np.
 	*/
-	void Polygon::areinside(bool *out, const double *xyz, const int np) {
-		if (np > this->n) {
-			// If the number of points is greater than the number of points of the
-			// polygon, it is better to run the normal isinside
-			#ifdef USE_OMP
-			#pragma omp parallel shared(out,xyz) firstprivate(np)
-			{
-			#endif
-			for(int ip=OMP_THREAD_NUM; ip<np; ip+=OMP_NUM_THREADS) {
-				Point v(&xyz[3*ip]);
-				out[ip] = (this->bbox > v) ? ( (cn_PinPoly(this,v) != 0) ? true : false ) : false;
-			}
-			#ifdef USE_OMP
-			}
-			#endif
-		} else {
+	void Polygon::areinside_cn(bool *out, const double *xyz, const int np) {
+//		if (np > this->n) {
+//			// If the number of points is greater than the number of points of the
+//			// polygon, it is better to run the normal isinside
+//			#ifdef USE_OMP
+//			#pragma omp parallel shared(out,xyz) firstprivate(np)
+//			{
+//			#endif
+//			for(int ip=OMP_THREAD_NUM; ip<np; ip+=OMP_NUM_THREADS) {
+//				Point v(&xyz[3*ip]);
+//				out[ip] = (this->bbox > v) ? ( (cn_PinPoly(this,v) == 1) ? true : false ) : false;
+//			}
+//			#ifdef USE_OMP
+//			}
+//			#endif
+//		} else {
 			// Run the OMP version
 			for(int ip=0; ip<np; ++ip) {
 				Point v(&xyz[3*ip]);
-				out[ip] = (this->bbox > v) ? ( (cn_PinPoly_OMP(this,v) != 0) ? true : false ) : false;
+				out[ip] = (this->bbox > v) ? ( (cn_PinPoly_OMP(this,v) == 1) ? true : false ) : false;
 			}
-		}
+//		}
+	}
+	void Polygon::areinside_wn(bool *out, const double *xyz, const int np) {
+//		if (np > this->n) {
+//			// If the number of points is greater than the number of points of the
+//			// polygon, it is better to run the normal isinside
+//			#ifdef USE_OMP
+//			#pragma omp parallel shared(out,xyz) firstprivate(np)
+//			{
+//			#endif
+//			for(int ip=OMP_THREAD_NUM; ip<np; ip+=OMP_NUM_THREADS) {
+//				Point v(&xyz[3*ip]);
+//				out[ip] = (this->bbox > v) ? ( (wn_PinPoly(this,v) != 0) ? true : false ) : false;
+//			}
+//			#ifdef USE_OMP
+//			}
+//			#endif
+//		} else {
+			// Run the OMP version
+			for(int ip=0; ip<np; ++ip) {
+				Point v(&xyz[3*ip]);
+				out[ip] = (this->bbox > v) ? ( (wn_PinPoly_OMP(this,v) != 0) ? true : false ) : false;
+			}
+//		}
 	}
 
 	/* COMPUTE_CENTROID
