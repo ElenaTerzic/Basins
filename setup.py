@@ -1,4 +1,4 @@
-#!/usr/bin/env cython
+#!/usr/bin/env python
 
 # Edited by amiro and eterzic 21.02.2021
 from __future__ import print_function, division
