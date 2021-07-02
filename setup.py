@@ -38,5 +38,6 @@ setup(
     url='https://github.com/ElenaTerzic/Basins.git',
     packages=find_packages(exclude=('Examples','doc','ShapefileExtractor')),
 	include_package_data=True,
+	scripts=['bin/basins_info'],
 	install_requires=['numpy','cython']
 )

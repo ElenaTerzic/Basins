@@ -1,0 +1,42 @@
+#!/usr/bin/env python
+#
+# Display basins information
+#
+# Arnau Miro, Elena Terzic (2021)
+from __future__ import print_function
+
+import argparse
+import Basins
+
+
+## Define input arguments
+argpar = argparse.ArgumentParser(prog="basins_info", description="Display basins information.")
+argpar.add_argument('-b','--basin',type=str,help='Basin to display info (e.g., worldseas.med)', required=True, dest='basin')
+argpar.add_argument('-p','--print',type=str,help='Dump basin info to a file', dest='print')
+argpar.add_argument("-d","--display",action='store_true',help='Display the basin using matplotlib',dest="disp")
+
+
+## Parse input arguments
+args=argpar.parse_args()
+module = args.basin.split('.')[0]
+basin  = args.basin.split('.')[1]
+
+
+## Obtain basin object
+basin_obj = getattr(getattr(Basins,module),basin)
+print(basin_obj)
+
+
+## Dump into a file if requested
+if args.print:
+	basin_obj.to_file(args.print)
+
+
+## Display if requested
+if args.disp:
+	import matplotlib.pyplot as plt
+	plt.figure(figsize=(8,6),dpi=100)
+	plt.plot(basin_obj.x,basin_obj.y,'o-k')
+	plt.scatter(basin_obj.centroid.x,basin_obj.centroid.y,marker='x',c='k')
+
+	plt.show()
