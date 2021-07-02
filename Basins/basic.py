@@ -534,7 +534,7 @@ class Polygon(object):
 			               [  sz,  cz,   0],
 			               [   0,   0,   1]])
 			# Compute rotation matrix R
-			R = Rx @ Ry @ Rz
+			R = np.matmul(Rx,np.matmul(Ry,Rz))
 			# Project the points
 			for ip in range(self.npoints): # Make sure to ge the last one too
 				self._points[ip].xyz = np.matmul(R,self._points[ip].xyz - o.xyz) + o.xyz
