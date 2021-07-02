@@ -28,7 +28,7 @@ print(basin_obj)
 
 
 ## Dump into a file if requested
-if args.print:
+if args.print and not isinstance(basin_obj,Basins.ComposedBasin):
 	basin_obj.to_file(args.print)
 
 
@@ -36,7 +36,11 @@ if args.print:
 if args.disp:
 	import matplotlib.pyplot as plt
 	plt.figure(figsize=(8,6),dpi=100)
-	plt.plot(basin_obj.x,basin_obj.y,'o-k')
+	if isinstance(basin_obj,Basins.ComposedBasin):
+		for b in basin_obj:
+			plt.plot(b.x,b.y,'o-k')
+	else:
+		plt.plot(basin_obj.x,basin_obj.y,'o-k')
 	plt.scatter(basin_obj.centroid.x,basin_obj.centroid.y,marker='x',c='k')
 
 	plt.show()
