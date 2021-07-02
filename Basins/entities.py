@@ -23,6 +23,16 @@ class Basin(Polygon):
 		retstr += super(Basin, self).__str__()
 		return retstr
 
+	def to_file(self,filename):
+		'''
+		Dump the x and y coordinates 
+		'''
+		x, y = self.x, self.y
+		file = open(filename,'w')
+		for ip in range(self.npoints):
+			file.write('%f %f\n'%(x[ip],y[ip]))
+		file.close()
+
 	@classmethod
 	def from_array(cls,abbrev,name,xyz):
 		'''
