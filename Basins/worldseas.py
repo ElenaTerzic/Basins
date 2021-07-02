@@ -25,7 +25,7 @@ east   = Basin.from_npy('east', 'Eastern Basin' , os.path.join(SHAPESPATH,'EastM
 baltic = Basin.from_npy('bal' , 'Baltic Sea'    , os.path.join(SHAPESPATH,'BalticSea_WorldSeas.npy'),downsample=4)
 aocean = Basin.from_npy('ao'  , 'Arctic Ocean'  , os.path.join(SHAPESPATH,'ArcticOcean_WorldSeas.npy'),downsample=4)
 nsea   = Basin.from_npy('nsea', 'North Sea'     , os.path.join(SHAPESPATH,'NorthSea_WorldSeas.npy'),downsample=4)
-norsea = Basin.from_npy('norw', 'Norwegian Sea' , os.path.join(SHAPESPATH,'NorwegianSea_WorldSeas_WorldSeas.npy'),downsample=4)
+norsea = Basin.from_npy('norw', 'Norwegian Sea' , os.path.join(SHAPESPATH,'NorwegianSea_WorldSeas.npy'),downsample=4)
 socean = Basin.from_npy('so'  , 'Southern Ocean', os.path.join(SHAPESPATH,'SouthernOcean_WorldSeas.npy'),downsample=4)
 
 natlan = Basin.from_npy('na' , 'North Atlantic', os.path.join(SHAPESPATH,'NorthAtlantic_WorldSeas.npy'),downsample=4)
