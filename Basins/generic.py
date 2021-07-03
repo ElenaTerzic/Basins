@@ -14,3 +14,5 @@ emed   = Basin.from_array('emed' , 'Eastern Mediterranean', np.array([[15.12, 36
 
 socean = Basin.from_array('so'   , 'Southern Ocean'       , np.array([[60.64, -47.52 , 0.],[79.01, -47.28 , 0.],[78.50, -57.61 , 0.],[61.70, -56.80 , 0.]]) )
 kotor  = Basin.from_array('kotor', 'Bay of Kotor'         , np.array([[18.48, 42.51, 0.],[18.48, 42.43, 0.],[18.52, 42.40, 0.],[18.58, 42.39, 0.],[18.78, 42.39, 0.],[18.78, 42.49, 0.],[18.69, 42.52, 0.]]))
+
+del print_function, division, os, np, Basin

@@ -41,3 +41,5 @@ emed   = ComposedBasin('emed', 'Eastern Mediterranean', [adr,aeg,ion,east])
 med    = ComposedBasin('med' , 'Mediterranean Sea'    , [alb,bal,lig,tyr,west,adr,aeg,ion,east])
 
 spacif = ComposedBasin('sp', 'South Pacific', [spaci1,spaci2])
+
+del print_function, division, os, np, Basin, ComposedBasin

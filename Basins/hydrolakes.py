@@ -15,3 +15,5 @@ SHAPESPATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),'shapes')
 skadar_lowres  = Basin.from_npy('skadar', 'Skadar Lake', os.path.join(SHAPESPATH,'Skadar_HydroLAKES.npy'),downsample=6)
 skadar_midres  = Basin.from_npy('skadar', 'Skadar Lake', os.path.join(SHAPESPATH,'Skadar_HydroLAKES.npy'),downsample=4)
 skadar_highres = Basin.from_npy('skadar', 'Skadar Lake', os.path.join(SHAPESPATH,'Skadar_HydroLAKES.npy'),downsample=1)
+
+del print_function, division, os, np, Basin

@@ -11,18 +11,35 @@ import Basins
 
 ## Define input arguments
 argpar = argparse.ArgumentParser(prog="basins_info", description="Display basins information.")
-argpar.add_argument('-b','--basin',type=str,help='Basin to display info (e.g., worldseas.med)', required=True, dest='basin')
+argpar.add_argument('-b','--basin',type=str,help='Basin to display info (e.g., worldseas.med)',dest='basin')
+argpar.add_argument("-l","--list",action='store_true',help='List all the available basins and close',dest="list")
 argpar.add_argument('-p','--print',type=str,help='Dump basin info to a file', dest='print')
 argpar.add_argument("-d","--display",action='store_true',help='Display the basin using matplotlib',dest="disp")
 
-
-## Parse input arguments
+# Parse input arguments
 args=argpar.parse_args()
-module = args.basin.split('.')[0]
-basin  = args.basin.split('.')[1]
+
+
+## List
+if args.list:
+	MODULES_LIST = ['generic', 'hydrolakes', 'worldseas']
+	for module in MODULES_LIST:
+		module_obj = getattr(Basins,module)
+		basins_dict = vars(module_obj)
+		# Print
+		print('module %s:'%module)
+		for key in basins_dict.keys():
+			if 'SHAPESPATH' in key or '__' in key: continue
+			name   = basins_dict[key].name
+			abbrev = basins_dict[key].abbrev
+			# Print
+			print('  %s - %s (%s)' % (key,name,abbrev))
+	exit(0)
 
 
 ## Obtain basin object
+module = args.basin.split('.')[0]
+basin  = args.basin.split('.')[1]
 basin_obj = getattr(getattr(Basins,module),basin)
 print(basin_obj)
 
