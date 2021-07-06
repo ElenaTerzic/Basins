@@ -65,13 +65,12 @@ It defines the following basic entities:
 * SimpleCube
 * Cube
 
-as well as the *basin* entity defined by an array of points. A number of predefined basins are included as:
+as well as the *basin* entity defined by an array of points. A number of predefined basins are included from different sources. The generic basins are:
 * **med**, Mediterranean Sea
 * **wmed**, Western Mediterranean
 * **emed**, Eastern Mediterranean
 * **socean**, Southern Ocean
 * **kotor**, Bay of Kotor
-* **skadar_lowres**, **skadar_midres**, **skadar_highres**, Skadar Lake
 
 The methods *isinside(Point)* or *areinside(np.array)* can be used to check if a point or a set of points are inside (True) or outside (False) the region.
 ```python
@@ -86,3 +85,20 @@ inside = Basins.med.areinside(xyzp)
 inside = Basins.med > xyzp
 ```
 Note that the operator *>* is more generic and is able to understand if the input data is a Point or a numpy array of points.
+
+### Basins information tool
+
+The command line tool *basins_info* provides basic info about the available basins inside this tool. To list all the basins just run:
+```bash
+basins_info -l
+```
+
+Information on different basins can be obtained by the command:
+```bash
+basins_info -b <module>.<basin>
+```
+where **module** is the group where the basin belongs (eg., worldseas) and **basin** its name (eg. kotor). Using either _-d_ or _--display__ a plot of the basin will be generated. The polygon that forms the basin can be dumped to a text file as shown in this example:
+```bash
+basins_info -b worldseas.adr -p poly_adr.txt
+```
+which will store the polygon forming the Adriatic sea into the file **poly_adr.txt**.
