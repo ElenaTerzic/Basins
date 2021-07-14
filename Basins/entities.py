@@ -129,7 +129,7 @@ class ComposedBasin(object):
 		out = np.zeros((xyz.shape[0],len(self.basins)),dtype=bool)
 		for ii,basin in enumerate(self.basins):
 			out[:,ii] = basin.areinside(xyz)
-		return np.logical_or(out,axis=1)
+		return np.logical_or.reduce(out,axis=1)
 
 	def compute_centroid(self):
 		'''
