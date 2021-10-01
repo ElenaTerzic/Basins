@@ -22,7 +22,7 @@ args=argpar.parse_args()
 
 ## List
 if args.list:
-	MODULES_LIST = ['generic', 'hydrolakes', 'worldseas']
+	MODULES_LIST = ['generic', 'hydrolakes', 'worldseas','worldcountries']
 	for module in MODULES_LIST:
 		module_obj = getattr(Basins,module)
 		basins_dict = vars(module_obj)
@@ -42,6 +42,7 @@ module = args.basin.split('.')[0]
 basin  = args.basin.split('.')[1]
 basin_obj = getattr(getattr(Basins,module),basin)
 print(basin_obj)
+print(basin_obj.box)
 
 
 ## Dump into a file if requested
