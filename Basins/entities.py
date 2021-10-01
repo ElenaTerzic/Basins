@@ -60,6 +60,10 @@ class Basin(Polygon):
 	def name(self):
 		return self._name
 
+	@property
+	def box(self):
+		return [np.max(self.x),np.min(self.x),np.max(self.y),np.min(self.y)]
+
 
 class ComposedBasin(object):
 	'''
@@ -156,6 +160,14 @@ class ComposedBasin(object):
 	@property
 	def centroid(self):
 		return self.compute_centroid()
+
+	@property
+	def box(self):
+		x,y = np.array([],np.double),np.array([],np.double)
+		for basin in self.basins:
+			x = np.concatenate((x,basin.x))
+			y = np.concatenate((y,basin.y))
+		return [np.max(x),np.min(x),np.max(y),np.min(y)]
 
 
 class Line(object):
