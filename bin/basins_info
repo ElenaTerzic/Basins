@@ -27,13 +27,13 @@ if args.list:
 		module_obj = getattr(Basins,module)
 		basins_dict = vars(module_obj)
 		# Print
-		print('module %s:'%module)
+		print('module %s:'%module,flush=True)
 		for key in basins_dict.keys():
 			if 'SHAPESPATH' in key or '__' in key: continue
 			name   = basins_dict[key].name
 			abbrev = basins_dict[key].abbrev
 			# Print
-			print('  %s - %s (%s)' % (key,name,abbrev))
+			print('  %s - %s (%s)' % (key,name,abbrev),flush=True)
 	exit(0)
 
 
@@ -41,8 +41,8 @@ if args.list:
 module = args.basin.split('.')[0]
 basin  = args.basin.split('.')[1]
 basin_obj = getattr(getattr(Basins,module),basin)
-print(basin_obj)
-print(basin_obj.box)
+print(basin_obj,flush=True)
+print(basin_obj.box,flush=True)
 
 
 ## Dump into a file if requested
