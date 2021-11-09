@@ -1,4 +1,4 @@
-# Compile PYALYA
+# Compile Basins
 #   Compile with g++ or Intel C++ Compiler
 #   Compile with the most aggressive optimization setting (O3)
 #   Use the most pedantic compiler settings: must compile with no warnings at all
@@ -10,28 +10,13 @@
 #
 # Arnau Miro 2021
 
-# Optimization, host and CPU type
-#
-OPTL = 2
-HOST = Host
-TUNE = skylake
-
-
-# Options
-#
-VECTORIZATION = ON
-OPENMP_PARALL = OFF
-FORCE_GCC     = OFF
-DEBUGGING     = OFF
-USE_COMPILED  = ON
-
+# Include user-defined build configuration file
+include options.cfg
 
 # Compilers
 #
 # Automatically detect if the intel compilers are installed and use
 # them, otherwise default to the GNU compilers
-PYTHON = python
-PIP    = pip
 ifeq ($(FORCE_GCC),ON) 
 	# Forcing the use of GCC
 	# C Compiler
@@ -57,10 +42,6 @@ else
 		FC = ifort
 	endif
 endif
-
-# Defines
-#
-DFLAGS =
 
 # Compiler flags
 #
@@ -116,6 +97,9 @@ CXXFLAGS += -std=c++11
 # Header includes
 CXXFLAGS += -I${INC_PATH}
 
+# Defines
+#
+DFLAGS = -DNPY_NO_DEPRECATED_API
 
 # One rule to compile them all, one rule to find them,
 # One rule to bring them all and in the compiler link them.
@@ -127,17 +111,17 @@ all: requirements python install
 # Python
 #
 python: setup.py
-	@CFLAGS="${CFLAGS}" CXXFLAGS="${CXXFLAGS}" USE_COMPILED="${USE_COMPILED}" ${PYTHON} $< build_ext --inplace
+	@CC="${CC}" CFLAGS="${CFLAGS} ${DFLAGS}" CXX="${CXX}" CXXFLAGS="${CXXFLAGS} ${DFLAGS}" LDSHARED="${CC} -shared" ${PYTHON} $< build_ext --inplace
 	@echo "Python programs deployed successfully"
 
 requirements: requirements.txt
 	@${PIP} install -r $<
 
 install: 
-	@${PIP} install .
+	@CC="${CC}" CFLAGS="${CFLAGS} ${DFLAGS}" CXX="${CXX}" CXXFLAGS="${CXXFLAGS} ${DFLAGS}" LDSHARED="${CC} -shared" ${PIP} install .
 
 install_dev: 
-	@${PIP} install -e .
+	@CC="${CC}" CFLAGS="${CFLAGS} ${DFLAGS}" CXX="${CXX}" CXXFLAGS="${CXXFLAGS} ${DFLAGS}" LDSHARED="${CC} -shared" ${PIP} install -e .
 
 
 # Generic object makers
