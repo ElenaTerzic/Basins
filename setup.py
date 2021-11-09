@@ -46,6 +46,7 @@ if CC == 'gcc':
 	if options['OPENMP_PARALL']:
 		CFLAGS   += ' -fopenmp'
 		CXXFLAGS += ' -fopenmp'
+		DFLAGS   += ' -DUSE_OMP'
 else:
 	# Using GCC as a compiler
 	CFLAGS   += ' -O0 -g -traceback -fPIC' if options['DEBUGGING'] else ' -O%s -fPIC' % options['OPTL']
@@ -60,6 +61,7 @@ else:
 	if options['OPENMP_PARALL']:
 		CFLAGS   += ' -qopenmp'
 		CXXFLAGS += ' -qopenmp'
+		DFLAGS   += ' -DUSE_OMP'
 
 
 ## Set up environment variables
