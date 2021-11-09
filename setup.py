@@ -24,15 +24,15 @@ with open('options.cfg') as f:
 
 
 ## Set up compiler options and flags
-CC  = 'mpicc'   if options['FORCE_GCC'] or not os.system('which icc > /dev/null') == 0 else 'mpiicc'
-CXX = 'mpicxx'  if options['FORCE_GCC'] or not os.system('which icc > /dev/null') == 0 else 'mpiicpc'
-FC  = 'mpifort' if options['FORCE_GCC'] or not os.system('which icc > /dev/null') == 0 else 'mpiifort'
+CC  = 'gcc'   if options['FORCE_GCC'] or not os.system('which icc > /dev/null') == 0 else 'icc'
+CXX = 'g++'  if options['FORCE_GCC'] or not os.system('which icc > /dev/null') == 0 else 'icpc'
+FC  = 'gfortran' if options['FORCE_GCC'] or not os.system('which icc > /dev/null') == 0 else 'ifort'
 
 CFLAGS   = ''
 CXXFLAGS = ' -std=c++11'
 FFLAGS   = ''
 DFLAGS   = ' -DNPY_NO_DEPRECATED_API'
-if CC == 'mpicc':
+if CC == 'gcc':
 	# Using GCC as a compiler
 	CFLAGS   += ' -O0 -g -rdynamic -fPIC' if options['DEBUGGING'] else ' -O%s -ffast-math -fPIC' % options['OPTL']
 	CXXFLAGS += ' -O0 -g -rdynamic -fPIC' if options['DEBUGGING'] else ' -O%s -ffast-math -fPIC' % options['OPTL']
