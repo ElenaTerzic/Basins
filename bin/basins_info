@@ -22,7 +22,7 @@ args=argpar.parse_args()
 
 ## List
 if args.list:
-	MODULES_LIST = ['generic', 'hydrolakes', 'worldseas','worldcountries']
+	MODULES_LIST = ['generic', 'hydrolakes', 'worldseas','worldcountries','adriatic']
 	for module in MODULES_LIST:
 		module_obj = getattr(Basins,module)
 		basins_dict = vars(module_obj)
