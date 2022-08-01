@@ -18,4 +18,4 @@ south = Basin.from_npy('sadr', 'South Adriatic', os.path.join(SHAPESPATH,'South_
 # Composed basins
 all   = ComposedBasin('adr', 'Adriatic', [north,mid,south])
 
-del print_function, division, os, np, Basin
+del print_function, division, os, np, Basin, ComposedBasin
