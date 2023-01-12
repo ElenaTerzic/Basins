@@ -16,6 +16,6 @@ adr    = Basin.from_array('adr'  , 'Adriatic'             , np.array([[18.363647
 socean = Basin.from_array('so'   , 'Southern Ocean'       , np.array([[60.64, -47.52 , 0.],[79.01, -47.28 , 0.],[78.50, -57.61 , 0.],[61.70, -56.80 , 0.]]) )
 kotor  = Basin.from_array('kotor', 'Bay of Kotor'         , np.array([[18.48, 42.51, 0.],[18.48, 42.43, 0.],[18.52, 42.40, 0.],[18.58, 42.39, 0.],[18.78, 42.39, 0.],[18.78, 42.49, 0.],[18.69, 42.52, 0.]]))
 
-world  = Basins.SimpleRectangle(-180.,180.,-90.,90.)
+world  = Basin.from_array('world', 'World'                , np.array([[-180.0,-90.0,0.0],[180.0,-90.0,0.0],[180.0,90.0,0.0],[-180.0,90.0,0.0]]))
 
 del print_function, division, os, np, Basin
