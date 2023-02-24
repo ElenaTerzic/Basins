@@ -126,6 +126,14 @@ class ComposedBasin(object):
 			if basin.isinside(point): return True
 		return False
 
+	def isinbasin(self,point):
+		'''
+		Returns the basin where the point is inside
+		'''
+		for basin in self.basins:
+			if basin.isinside(point): return basin
+		return Basin('none','Not Found',np.array([Point(0.,0.,0.)]))
+
 	def areinside(self,xyz):
 		'''
 		Returns True if the points are inside the polygon, else False.
@@ -134,6 +142,16 @@ class ComposedBasin(object):
 		for ii,basin in enumerate(self.basins):
 			out[:,ii] = basin.areinside(xyz)
 		return np.logical_or.reduce(out,axis=1)
+
+	def areinbasin(self,xyz):
+		'''
+		Returns a list with the basins that the points are inside 
+		'''		
+		out = np.array([Basin('none','Not Found',np.array([Point(0.,0.,0.)]))]*xyz.shape[0],object)
+		for ii,basin in enumerate(self.basins):
+			mask = basin.areinside(xyz)
+			out[mask] = basin
+		return out
 
 	def compute_centroid(self):
 		'''
