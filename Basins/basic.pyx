@@ -401,7 +401,7 @@ cdef class Ball:
 	def areinside(Ball self,double[:,:] xyz):
 		cdef int ii, npoints = xyz.shape[0]
 		cdef CPoint p
-		cdef np.ndarray[np.npy_bool,ndim=1,cast=True] out = np.ndarray((npoints,),dtype=np.bool)
+		cdef np.ndarray[np.npy_bool,ndim=1,cast=True] out = np.ndarray((npoints,),dtype=np.bool_)
 		for ii in range(npoints):
 			p       = CPoint(xyz[ii,0],xyz[ii,1],xyz[ii,2])
 			out[ii] = self._ball.isinside(p)
@@ -549,7 +549,7 @@ cdef class Polygon:
 			Returns True if the points are inside the polygon, else False.
 			'''
 			cdef npoints = xyz.shape[0]
-			cdef np.ndarray[np.npy_bool,ndim=1,cast=True] out = np.ndarray((npoints,),dtype=np.bool)
+			cdef np.ndarray[np.npy_bool,ndim=1,cast=True] out = np.ndarray((npoints,),dtype=np.bool_)
 #			self._poly.areinside(<bool*>&out[0],&xyz[0,0],npoints)
 			self._poly.areinside_cn(<bool*>&out[0],&xyz[0,0],npoints)
 #			self._poly.areinside_wn(<bool*>&out[0],&xyz[0,0],npoints)
