@@ -34,6 +34,7 @@ jobs:
         # Run Examples
       - name: Run examples
         run: |
+          pip install matplotlib
           python Examples/example_basic.py
           python Examples/example_plot_basin.py
           python Examples/example_plot_composedbasin.py
