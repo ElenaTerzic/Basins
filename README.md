@@ -1,3 +1,8 @@
+[![Build status](https://github.com/ElenaTerzic/Basins/actions/workflows/build_python.yml/badge.svg)](https://github.com/ElenaTerzic/Basins/actions)
+[![Build status](https://github.com/ElenaTerzic/Basins/actions/workflows/build_gcc.yml/badge.svg)](https://github.com/ElenaTerzic/Basins/actions)
+[![Build status](https://github.com/ElenaTerzic/Basins/actions/workflows/build_intel.yml/badge.svg)](https://github.com/ElenaTerzic/Basins/actions)
+[![License](https://img.shields.io/badge/license-GPL3-orange)](https://opensource.org/license/gpl-3-0/)
+
 # Basins
 
 This project contains tools to specify regions of interest when analysing float, satellite or model data. They are managed through a C++ interface for maximum performance and contain data extracted from shapefiles.

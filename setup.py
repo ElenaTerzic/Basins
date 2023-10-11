@@ -92,16 +92,20 @@ modules_list = [Module_Basins] if options['USE_COMPILED'] else []
 
 ## Main setup
 setup(
-	name="Basins",
-	version="1.5.0",
+	name                 = "Basins",
+	version              = "1.5.0",
+	author               = 'Arnau Miro, Elena Terzić',
+	author_email         = 'arnau.miro@upc.edu, elena.terzic@proton.me',
+	maintainer           = 'Arnau Miro',
+	maintainer_email     = 'arnau.miro@upc.edu',	
 	ext_modules=cythonize(modules_list,
 		language_level = str(sys.version_info[0]), # This is to specify python 3 synthax
 		annotate       = False                     # This is to generate a report on the conversion to C code
 	),
-    long_description=readme,
-    url='https://github.com/ElenaTerzic/Basins.git',
-    packages=find_packages(exclude=('Examples','doc','ShapefileExtractor')),
-	include_package_data=True,
-	scripts=['bin/basins_info'],
-	install_requires=['numpy','cython']
+    long_description     = readme,
+    url                  = 'https://github.com/ElenaTerzic/Basins.git',
+    packages             = find_packages(exclude=('Examples','doc','ShapefileExtractor')),
+	include_package_data = True,
+	scripts              = ['bin/basins_info'],
+	install_requires     = ['numpy','cython']
 )
