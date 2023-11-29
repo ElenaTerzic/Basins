@@ -13,7 +13,11 @@ basin = Basins.hydrolakes.skadar_highres
 print(basin)
 
 # Check if some points are inside
-xyzp = np.array([[19.45,42.30,0.],[19.3801,42.2972,0.],[19.23,42.24,0.],[19.2,42.1,0.]])
+lon  = np.array([19.45,19.3801,19.23,19.2])
+lat  = np.array([42.30,42.2972,42.24,42.1])
+xyzp = np.zeros((len(lon),3))
+xyzp[:,0] = lon
+xyzp[:,1] = lat
 inside = basin.areinside(xyzp)
 
 # Plot
