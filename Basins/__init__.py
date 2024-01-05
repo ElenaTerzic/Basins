@@ -6,6 +6,6 @@ __VERSION__ = '1.2.0'
 
 from .basic    import Point, Ball, Polygon
 from .entities import Basin, ComposedBasin, Line, SimpleRectangle, Rectangle, Plane, SimpleCube, Cube
-from .         import generic, hydrolakes, worldseas, worldcountries, adriatic, baltic
+from .         import generic, climate, hydrolakes, worldseas, worldcountries, adriatic, baltic
 
 del basic, entities

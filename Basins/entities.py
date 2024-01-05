@@ -288,6 +288,8 @@ class SimpleRectangle(Polygon):
 	1-------2
 	'''
 	def __init__(self,xmin,xmax,ymin,ymax):
+		self._abbrev = 'sr'
+		self._name   = 'Simple Rectangle'
 		pointList = np.array([
 			Point(xmin,ymin,0.), # 1
 			Point(xmax,ymin,0.), # 2
@@ -321,6 +323,18 @@ class SimpleRectangle(Polygon):
 		npoints   = xyz.shape[0]
 		if not npoints == 5: raiseError('Invalid number of points for Rectangle %d' % npoints)
 		return super(SimpleRectangle, cls).from_array(xyz)
+	
+	@property
+	def abbrev(self):
+		return self._abbrev
+
+	@property
+	def name(self):
+		return self._name
+
+	@property
+	def box(self):
+		return [np.max(self.x),np.min(self.x),np.max(self.y),np.min(self.y)]
 
 
 class Rectangle(Polygon):
@@ -334,6 +348,8 @@ class Rectangle(Polygon):
 	'''
 	def __init__(self,points):
 		if not len(points) == 4: raiseError('Invalid Rectangle!')
+		self._abbrev = 'r'
+		self._name   = 'Rectangle'
 		self._center = Point.from_array(0.25*(points[0].xyz+points[1].xyz+points[2].xyz+points[3].xyz))
 		super(Rectangle, self).__init__(points)
 
@@ -406,6 +422,18 @@ class Rectangle(Polygon):
 		if not npoints == 4: raiseError('Invalid number of points for Rectangle %d' % npoints)
 		return super(Rectangle, cls).from_array(xyz)
 
+	@property
+	def abbrev(self):
+		return self._abbrev
+
+	@property
+	def name(self):
+		return self._name
+
+	@property
+	def box(self):
+		return [np.max(self.x),np.min(self.x),np.max(self.y),np.min(self.y)]
+
 
 class Plane(Rectangle):
 	'''
@@ -419,6 +447,8 @@ class Plane(Rectangle):
 	def __init__(self,points,mindist=0.1):
 		self._mindist = mindist
 		if not len(points) == 4: raiseError('Invalid Plane!')
+		self._abbrev = 'p'
+		self._name   = 'Plane'
 		super(Plane, self).__init__(points)
 
 	def isinside(self,point,algorithm=None):
@@ -459,6 +489,18 @@ class Plane(Rectangle):
 		# Appart from being inside the point has to fulfill the minimum distance
 		print(inside,dist)
 		return np.logical_and(inside,np.abs(dist[:,0]) <= self._mindist)
+
+	@property
+	def abbrev(self):
+		return self._abbrev
+
+	@property
+	def name(self):
+		return self._name
+
+	@property
+	def box(self):
+		return [np.max(self.x),np.min(self.x),np.max(self.y),np.min(self.y)]
 
 
 class SimpleCube(Polygon):
