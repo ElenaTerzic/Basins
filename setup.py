@@ -93,7 +93,7 @@ modules_list = [Module_Basins] if options['USE_COMPILED'] else []
 ## Main setup
 setup(
 	name                 = "Basins",
-	version              = "1.5.0",
+	version              = "1.6.0",
 	author               = 'Arnau Miro, Elena Terzić',
 	author_email         = 'arnau.miro@upc.edu, elena.terzic@proton.me',
 	maintainer           = 'Arnau Miro',
