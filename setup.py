@@ -8,6 +8,13 @@ import sys, os, numpy as np
 from setuptools import setup, Extension, find_packages
 from Cython.Build import cythonize
 
+
+## Read INIT file
+with open('pyLOM/__init__.py') as f:
+	for l in f.readlines():
+		if '__version__' in l:
+			__version__ = eval(l.split('=')[1].strip())
+
 with open('README.md') as f:
 	readme = f.read()
 
@@ -93,7 +100,7 @@ modules_list = [Module_Basins] if options['USE_COMPILED'] else []
 ## Main setup
 setup(
 	name                 = "Basins",
-	version              = "1.6.0",
+	version              = __version__,
 	author               = 'Arnau Miro, Elena Terzić',
 	author_email         = 'arnau.miro@upc.edu, elena.terzic@proton.me',
 	maintainer           = 'Arnau Miro',

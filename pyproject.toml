@@ -17,7 +17,8 @@ name = "Basins"
 #
 # For a discussion on single-sourcing the version, see
 # https://packaging.python.org/guides/single-sourcing-package-version/
-version = "1.6.0"
+#version = "1.6.0"
+dynamic = ["version"]
 
 # This is a one-line description or tagline of what your project does. This
 # corresponds to the "Summary" metadata field:
@@ -38,12 +39,13 @@ readme = "README.md"
 # 'Programming Language' classifiers above, 'pip install' will check this
 # and refuse to install the project if the version does not match. See
 # https://packaging.python.org/guides/distributing-packages-using-setuptools/#python-requires
-requires-python = ">=3.7"
+requires-python = ">=3.9"
 
 # This is either text indicating the license for the distribution, or a file
 # that contains the license
 # https://packaging.python.org/en/latest/specifications/core-metadata/#license
-license = {file = "LICENSE"}
+license = "GPL-3.0-or-later"
+license-files = ["LICENSE"]
 
 # This field adds keywords for your project which will appear on the
 # project page. What does your project relate to?
@@ -82,18 +84,14 @@ classifiers = [  # Optional
   "Intended Audience :: Science/Research",
   "Topic :: Scientific/Engineering",
 
-  # Pick your license as you wish
-  "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
-
   # Specify the Python versions you support here. In particular, ensure
   # that you indicate you support Python 3. These classifiers are *not*
   # checked by "pip install". See instead "python_requires" below.
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.7",
-  "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3 :: Only",
 ]
 
@@ -145,6 +143,9 @@ script-files = [
   "bin/basins_info",
 ]
 
+[tool.setuptools.dynamic]
+version = {attr = "Basins.__version__"}
+
 [tool.setuptools.packages.find]
 exclude = ["Examples","doc","ShapefileExtractor"]
 
@@ -152,7 +153,7 @@ exclude = ["Examples","doc","ShapefileExtractor"]
 # These are the assumed default build requirements from pip:
 # https://pip.pypa.io/en/stable/reference/pip/#pep-517-and-518-support
 requires = [
-  "setuptools>=43.0.0", 
+  "setuptools>=77.0.0", 
   "wheel",
   "numpy",
   "cython",
