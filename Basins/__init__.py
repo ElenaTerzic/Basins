@@ -2,7 +2,7 @@
 
 # Edited by amiro and eterzic 25.01.2021
 
-__version__ = '1.6.5'
+__version__ = '1.6.6'
 
 from .basic    import Point, Ball, Polygon
 from .entities import Basin, ComposedBasin, Line, SimpleRectangle, Rectangle, Plane, SimpleCube, Cube
