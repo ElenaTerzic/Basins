@@ -10,7 +10,7 @@ from Cython.Build import cythonize
 
 
 ## Read INIT file
-with open('pyLOM/__init__.py') as f:
+with open('Basins/__init__.py') as f:
 	for l in f.readlines():
 		if '__version__' in l:
 			__version__ = eval(l.split('=')[1].strip())
