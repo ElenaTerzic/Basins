@@ -11,18 +11,18 @@ from scipy.spatial  import ConvexHull
 from .basic import Point, Ball, Polygon
 
 
-class Basin(Polygon):
+class Basin3D(Polygon):
 	'''
 	A region defined by a polygon.
 	'''
 	def __init__(self,abbrev,name,points):
-		super(Basin, self).__init__(points)
+		super(Basin3D, self).__init__(points)
 		self._abbrev = abbrev
 		self._name   = name
 
 	def __str__(self):
 		retstr = 'Basin %s (%s) with %d points:\n' % (self.name,self.abbrev,self.npoints)
-		retstr += super(Basin, self).__str__()
+		retstr += super(Basin3D, self).__str__()
 		return retstr
 
 	def to_file(self,filename):
@@ -65,6 +65,39 @@ class Basin(Polygon):
 	@property
 	def box(self):
 		return [np.max(self.x),np.min(self.x),np.max(self.y),np.min(self.y)]
+
+class Basin(Basin3D):
+	'''
+	A region defined by a polygon.
+	'''
+	def __init__(self,abbrev,name,points):
+		super(Basin, self).__init__(abbrev,name,points)
+
+	def areinside(self,xy):
+		'''
+		Returns True if the points are inside the polygon, else False.
+		'''
+		xyz = np.array([[p[0],p[1],0.] for p in xy])
+		return super(Basin, self).areinside(xyz)
+
+	@classmethod
+	def from_array(cls,abbrev,name,xyz):
+		'''
+		Build a basin from an array of points
+		of shape (npoints,3).
+		'''
+		pointList = np.array([Point.from_array(np.array([p[0],p[1],0.],np.double)) for p in xyz],dtype=Point)
+		return cls(abbrev,name,pointList)
+
+	@classmethod
+	def from_npy(cls,abbrev,name,fname,downsample=1):
+		'''
+		Build a basin from an array of points
+		obtained by reading an npy file.
+		'''
+		xyz = np.load(fname)
+		pointList = np.array([Point.from_array(np.array([p[0],p[1],0.],np.double)) for p in xyz[::downsample,:2]],dtype=Point)
+		return cls(abbrev,name,pointList)
 
 
 class ComposedBasin(object):

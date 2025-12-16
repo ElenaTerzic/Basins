@@ -15,7 +15,7 @@ print(basin)
 # Check if some points are inside
 lon  = np.array([19.45,19.3801,19.23,19.2])
 lat  = np.array([42.30,42.2972,42.24,42.1])
-xyzp = np.zeros((len(lon),3))
+xyzp = np.zeros((len(lon),2))
 xyzp[:,0] = lon
 xyzp[:,1] = lat
 inside = basin.areinside(xyzp)
