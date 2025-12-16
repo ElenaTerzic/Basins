@@ -103,6 +103,7 @@ classifiers = [  # Optional
 # https://packaging.python.org/discussions/install-requires-vs-requirements/
 dependencies = [
   "numpy",
+  "scipy",
   "cython",
 ]
 
@@ -156,6 +157,7 @@ requires = [
   "setuptools>=77.0.0", 
   "wheel",
   "numpy",
+  "scipy",
   "cython",
 ]
 build-backend = "setuptools.build_meta"
