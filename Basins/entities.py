@@ -6,6 +6,8 @@ from __future__ import print_function, division
 
 import numpy as np
 
+from scipy.spatial  import ConvexHull
+
 from .basic import Point, Ball, Polygon
 
 
@@ -209,7 +211,7 @@ class Line(object):
 		# Add the ball for the first point
 		vec = self._points[1] - self._points[0]
 		self._bbox[0] = Ball(self._points[0],vec.norm())
-		if not self._points[-1] == p2: raiseError('Last point does not match!!')
+		if not self._points[-1] == p2: raise ValueError('Last point does not match!!')
 		self._dist = np.array([])
 
 	def isempty(self):
@@ -321,7 +323,7 @@ class SimpleRectangle(Polygon):
 		of shape (npoints,3).
 		'''
 		npoints   = xyz.shape[0]
-		if not npoints == 5: raiseError('Invalid number of points for Rectangle %d' % npoints)
+		if not npoints == 5: raise ValueError('Invalid number of points for Rectangle %d' % npoints)
 		return super(SimpleRectangle, cls).from_array(xyz)
 	
 	@property
@@ -347,7 +349,7 @@ class Rectangle(Polygon):
 	1-------2
 	'''
 	def __init__(self,points):
-		if not len(points) == 4: raiseError('Invalid Rectangle!')
+		if not len(points) == 4: raise ValueError('Invalid Rectangle!')
 		self._abbrev = 'r'
 		self._name   = 'Rectangle'
 		self._center = Point.from_array(0.25*(points[0].xyz+points[1].xyz+points[2].xyz+points[3].xyz))
@@ -419,7 +421,7 @@ class Rectangle(Polygon):
 		of shape (npoints,3).
 		'''
 		npoints = xyz.shape[0]
-		if not npoints == 4: raiseError('Invalid number of points for Rectangle %d' % npoints)
+		if not npoints == 4: raise ValueError('Invalid number of points for Rectangle %d' % npoints)
 		return super(Rectangle, cls).from_array(xyz)
 
 	@property
@@ -446,7 +448,7 @@ class Plane(Rectangle):
 	'''
 	def __init__(self,points,mindist=0.1):
 		self._mindist = mindist
-		if not len(points) == 4: raiseError('Invalid Plane!')
+		if not len(points) == 4: raise ValueError('Invalid Plane!')
 		self._abbrev = 'p'
 		self._name   = 'Plane'
 		super(Plane, self).__init__(points)
@@ -553,7 +555,7 @@ class SimpleCube(Polygon):
 		of shape (npoints,3).
 		'''
 		npoints   = xyz.shape[0]
-		if not npoints == 8: raiseError('Invalid number of points for Cube %d' % npoints)
+		if not npoints == 8: raise ValueError('Invalid number of points for Cube %d' % npoints)
 		return super(SimpleCube, cls).from_array(xyz)
 
 
@@ -569,7 +571,7 @@ class Cube(Polygon):
 	1-------2
 	'''
 	def __init__(self,points):
-		if not len(points) == 8: raiseError('Invalid Cube!')
+		if not len(points) == 8: raise ValueError('Invalid Cube!')
 		super(Cube, self).__init__(points)
 		# Generate the indices for each face
 		self._face_ids = [(0,1,2,3),(4,5,6,7),(0,1,5,4),(2,6,7,3),(0,3,7,4),(1,2,6,5)]
@@ -626,5 +628,46 @@ class Cube(Polygon):
 		of shape (npoints,3).
 		'''
 		npoints   = xyz.shape[0]
-		if not npoints == 8: raiseError('Invalid number of points for Cube %d' % npoints)
+		if not npoints == 8: raise ValueError('Invalid number of points for Cube %d' % npoints)
 		return super(Cube, cls).from_array(xyz)
+
+
+class ConvexHull2D(Polygon):
+	'''
+	ConvexHull. One needs to provide the list of points on
+	the space
+	'''
+	def __init__(self,points):
+		super(ConvexHull2D, self).__init__(points)
+		self.centroid = Point.from_array(np.mean([p.xyz[:2] for p in points],axis=0))
+		# Store a convex hull representation of the polygon
+		self._hull = ConvexHull([p.xyz[:2] for p in points])
+
+	def isinside(self,point,*kwargs):
+		'''
+		Project the point to each of the faces of the cube and check
+		if the point is inside or outside of the 2D geometry.
+		Each face is a rectangle
+		'''
+		eps = np.finfo(point.xyz.dtype).eps
+		A, b = self._hull.equations[:, :-1], self._hull.equations[:, -1:]
+		return np.all(np.dot(point.xyz[:2],A.T) + b.T < eps, axis=1)
+
+	def areinside(self,xyz):
+		'''
+		Project the point to each of the faces of the cube and check
+		if the point is inside or outside of the 2D geometry.
+		Each face is a rectangle
+		'''
+		eps = np.finfo(xyz.dtype).eps
+		A, b = self._hull.equations[:, :-1], self._hull.equations[:, -1:]
+		print(xyz.shape,A.T.shape,b.shape)
+		return np.all(np.matmul(xyz[:,:2],A.T) + b.T < eps, axis=1)
+
+	@classmethod
+	def from_array(cls,xyz):
+		'''
+		Build a cube from an array of points
+		of shape (npoints,3).
+		'''
+		return super(ConvexHull2D,cls).from_array(xyz)
